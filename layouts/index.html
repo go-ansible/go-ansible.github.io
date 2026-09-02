@@ -4,18 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ .Site.Title }} — a pure-Go, functional-parity port of Ansible</title>
-<meta name="description" content="A pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible AES256 encryption, INI/YAML inventory parsing, Ansible's variable precedence ladder, and Jinja2-compatible templating with Ansible's filter and test library. No Python, no C extensions, one static binary.">
+<meta name="description" content="A pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, module execution, fact gathering, the playbook engine, and the four ansible-* CLI binaries. No Python, no C extensions, one static binary.">
 <style>
   :root {
     --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
     --border: #d0d7de; --accent: #2563EB; --accent-fg: #ffffff;
     --crypto: #4F46E5; --data: #0891B2; --engine: #2563EB;
+    --exec: #B45309; --probe: #15803D; --cli: #BE185D;
+    --yes: #15803D; --no: #B45309;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
       --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
       --border: #30363d; --accent: #60A5FA; --accent-fg: #0d1117;
       --crypto: #A5B4FC; --data: #67E8F9; --engine: #93C5FD;
+      --exec: #FCD34D; --probe: #86EFAC; --cli: #F9A8D4;
+      --yes: #86EFAC; --no: #FCD34D;
     }
   }
   /* Forced dark (manual toggle wins over the OS preference). */
@@ -23,12 +27,16 @@
   --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
   --border: #30363d; --accent: #60A5FA; --accent-fg: #0d1117;
   --crypto: #A5B4FC; --data: #67E8F9; --engine: #93C5FD;
+  --exec: #FCD34D; --probe: #86EFAC; --cli: #F9A8D4;
+  --yes: #86EFAC; --no: #FCD34D;
   }
   /* Forced light (manual toggle wins over the OS preference). */
   :root[data-theme="light"] {
   --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
   --border: #d0d7de; --accent: #2563EB; --accent-fg: #ffffff;
   --crypto: #4F46E5; --data: #0891B2; --engine: #2563EB;
+  --exec: #B45309; --probe: #15803D; --cli: #BE185D;
+  --yes: #15803D; --no: #B45309;
   }
   .theme-toggle {
     position: fixed; top: 14px; right: 14px; z-index: 10;
@@ -73,11 +81,25 @@
   .kind.crypto { color: var(--crypto); }
   .kind.data { color: var(--data); }
   .kind.engine { color: var(--engine); }
+  .kind.exec { color: var(--exec); }
+  .kind.probe { color: var(--probe); }
+  .kind.cli { color: var(--cli); }
   .card h3 .tags { display: inline-flex; gap: 6px; }
   .type { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
   .type.lib { color: var(--accent); border-color: var(--accent); }
   .type.cli { color: var(--accent-fg); background: var(--accent); border-color: var(--accent); }
   .principles { color: var(--muted); text-align: center; padding: 10px 0 0; max-width: 820px; margin: 0 auto; }
+  table.matrix { width: 100%; border-collapse: collapse; margin: 8px 0 24px; font-size: .92rem; }
+  table.matrix th, table.matrix td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  table.matrix th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+  table.matrix td.status { white-space: nowrap; font-weight: 600; }
+  table.matrix td.status.yes { color: var(--yes); }
+  table.matrix td.status.no { color: var(--no); }
+  .matrix-wrap { overflow-x: auto; }
+  .counts { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin: 8px 0 28px; }
+  .count-tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 22px; text-align: center; min-width: 160px; }
+  .count-tile .n { font-size: 1.8rem; font-weight: 700; display: block; }
+  .count-tile .l { color: var(--muted); font-size: .82rem; }
   footer { color: var(--muted); text-align: center; padding: 40px 0 56px; font-size: .9rem; }
   a { color: var(--accent); }
 </style>
@@ -93,14 +115,14 @@
     <img class="logo" src="/img/logo.svg" alt="go-ansible logo" width="88" height="88">
     <h1>go-ansible</h1>
     <p class="tagline">A pure-Go, <strong>functional-parity port of Ansible</strong> — Vault-compatible
-      encryption (<code>vault</code>), inventory parsing (<code>inventory</code>), Ansible's variable
-      precedence ladder (<code>vars</code>), and Jinja2-compatible templating (<code>template</code>),
-      with <strong>no Python, no C extensions, and one static binary</strong>.</p>
+      encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating,
+      module execution, fact gathering, the playbook engine, and all four <code>ansible-*</code> CLI
+      binaries, with <strong>no Python, no C extensions, and one static binary</strong>.</p>
     <div class="pills">
       <span class="pill">CGO_ENABLED=0</span>
       <span class="pill">byte-compatible with <code>ansible-vault</code></span>
-      <span class="pill">Jinja2-compatible templating</span>
-      <span class="pill">order-faithful precedence ladder</span>
+      <span class="pill">real per-host playbook execution</span>
+      <span class="pill">4 CLI binaries</span>
       <span class="pill">amd64 · arm64 · riscv64 · loong64 · ppc64le · s390x</span>
       <span class="pill">BSD-3-Clause</span>
     </div>
@@ -120,11 +142,16 @@
     <p class="lead">The bar for every component here is <strong>compatibility with the real thing</strong>,
       not a plausible reimplementation of it: <code>vault</code> reproduces
       <code>ansible.parsing.vault.VaultAES256</code>'s exact byte format, and <code>template</code>
-      implements the native-type rendering rule that trips up naive Jinja2 ports. Four components are
-      shipped and tested today; module execution, the playbook/role engine, fact gathering, a Galaxy
-      client, and the <code>ansible-*</code> CLI binaries are tracked on the
-      <a href="https://go-ansible.github.io/docs/latest/roadmap/">roadmap</a> and are not yet
-      functional — they are not listed below until they are.</p>
+      implements the native-type rendering rule that trips up naive Jinja2 ports. All eight core
+      repositories below are shipped and tagged; parity is still <strong>partial</strong> — see the
+      module count and the engine feature matrix further down this page for exactly what that does and
+      doesn't cover today, re-checked against the code rather than assumed.</p>
+
+    <div class="counts">
+      <div class="count-tile"><span class="n">20 / 71</span><span class="l">ansible.builtin modules implemented</span></div>
+      <div class="count-tile"><span class="n">8</span><span class="l">core repositories, all tagged</span></div>
+      <div class="count-tile"><span class="n">6</span><span class="l">CPU architectures, race-clean</span></div>
+    </div>
 
     <h2 class="section">Repositories</h2>
     <section class="grid">
@@ -144,14 +171,53 @@
       {{ end }}
     </section>
 
-    <h2 class="section">More on the way</h2>
-    <p class="principles">Module execution, the playbook/role/task engine, fact gathering, a Galaxy
-      client, and the <code>ansible-*</code> CLI binaries live in their own repositories under
-      <a href="https://github.com/go-ansible">github.com/go-ansible</a> but don't have working code
-      yet, so they aren't listed as repositories above — see the
-      <a href="https://go-ansible.github.io/docs/latest/roadmap/">roadmap</a> for what's next. The
-      playbook engine is the piece that will drive <code>vars</code> and <code>template</code>
-      together against a real play, rather than each being exercised standalone as they are today.</p>
+    <h2 class="section">Engine feature matrix</h2>
+    <p class="principles">The silent-no-op class — a playbook key that parses without error but does
+      nothing — is a worse risk than an outright missing feature, since a playbook using it succeeds
+      while quietly not doing what it claims. This table reflects <code>playbook/engine.go</code> and
+      <code>playbook/playbook.go</code> as read directly, not the shipped-package list: several of these
+      fields exist on the <code>Play</code>/<code>Task</code> structs and parse cleanly from YAML while
+      the engine never reads them.</p>
+    <div class="matrix-wrap">
+    <table class="matrix">
+      <thead><tr><th>Playbook feature</th><th>Status</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td><code>when</code> / <code>loop</code> / <code>register</code></td><td class="status yes">Implemented</td><td>Per-host, real conditionals and loop expansion</td></tr>
+        <tr><td><code>block</code> / <code>rescue</code> / <code>always</code></td><td class="status yes">Implemented</td><td>Genuine per-host recovery, not just parsed</td></tr>
+        <tr><td><code>notify</code> / handlers</td><td class="status yes">Implemented</td><td>Deduplicated, run once per host after the play</td></tr>
+        <tr><td><code>become</code></td><td class="status yes">Implemented</td><td>Real sudo end-to-end test in CI</td></tr>
+        <tr><td><code>pre_tasks</code> / <code>post_tasks</code></td><td class="status yes">Implemented</td><td>Concatenated into the task list in pre → tasks → post order and executed normally</td></tr>
+        <tr><td><code>roles</code></td><td class="status no">Not yet</td><td>Reserved key only — no <code>Role</code> type, no role-directory execution at all</td></tr>
+        <tr><td><code>tags</code> / <code>--tags</code>, <code>--skip-tags</code></td><td class="status no">Not yet</td><td>Parsed onto <code>Play</code> and <code>Task</code>, but no filtering logic anywhere and no CLI flags</td></tr>
+        <tr><td><code>delegate_to</code></td><td class="status no">Not yet</td><td>A real field on <code>Task</code>, parsed, never read by <code>engine.go</code> — the task always runs on its original host</td></tr>
+        <tr><td><code>serial</code></td><td class="status no">Not yet</td><td>A real field on <code>Play</code>, parsed, never read by <code>engine.go</code> — every play runs all hosts at once</td></tr>
+        <tr><td><code>vars_files</code></td><td class="status no">Not yet</td><td>Recognized as a reserved key; the referenced files are never loaded</td></tr>
+        <tr><td><code>strategy</code></td><td class="status no">Not yet</td><td>Reserved key only; execution is always the linear strategy</td></tr>
+        <tr><td><code>include_tasks</code> / <code>import_tasks</code> / <code>include_role</code> / <code>import_role</code></td><td class="status no">Not yet</td><td>Not parsed at all</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="principles">Also out of scope today: the collections/namespace system, dynamic inventory
+      plugins, lookup/callback plugins, <code>ansible.cfg</code>, and four of Ansible's own CLI tools
+      (<code>ansible-doc</code>, <code>ansible-config</code>, <code>ansible-pull</code>,
+      <code>ansible-console</code>). <code>ansible-galaxy</code> here only clones a role from a git URL —
+      no galaxy.ansible.com API, no collections. This matrix reflects the code as read on 2026-09-02;
+      engine work is active in parallel, so treat it as a snapshot, not a promise.</p>
+
+    <h2 class="section">Module coverage</h2>
+    <p class="principles"><code>modules/registry.go</code> registers <strong>20</strong> module names
+      (19 distinct implementations — <code>service</code> is systemd's classic alias, not a separate
+      module) against ansible.builtin's <strong>71</strong> modules, counted via
+      <code>ansible-doc -l -t module</code> against a real ansible-core 2.21.3. The scoped target for
+      this port is a core set of roughly 40–60 modules, not the full 3000+-module surface of Ansible plus
+      its collections.</p>
+
+    <h2 class="section">Dependencies</h2>
+    <p class="principles">The low-level connection layer — SSH, local execution, become/sudo — lives
+      outside this org, in <a href="https://github.com/go-remoteexec/transport"><code>go-remoteexec/transport</code></a>,
+      a project-neutral package shared with <a href="https://github.com/go-puppet-bolt">go-puppet-bolt/bolt</a>.
+      <code>modules</code>, <code>playbook</code>, and <code>cli</code> depend on it directly rather than
+      shipping their own transport.</p>
   </main>
 
   <footer class="wrap">
