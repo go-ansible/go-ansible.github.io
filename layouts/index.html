@@ -149,7 +149,7 @@
 
     <div class="counts">
       <div class="count-tile"><span class="n">62 / 62</span><span class="l">ansible.builtin modules implemented</span></div>
-      <div class="count-tile"><span class="n">70 / 71</span><span class="l">full ansible.builtin surface (modules + directives)</span></div>
+      <div class="count-tile"><span class="n">71 / 71</span><span class="l">full ansible.builtin surface (modules + directives)</span></div>
       <div class="count-tile"><span class="n">8</span><span class="l">core repositories, all tagged</span></div>
       <div class="count-tile"><span class="n">6</span><span class="l">CPU architectures, race-clean</span></div>
     </div>
@@ -202,7 +202,7 @@
         <tr><td><code>inventory_hostname</code> / <code>playbook_dir</code></td><td class="status yes">Implemented</td><td>Set as magic variables after host_vars, so a same-named host_var can't shadow them</td></tr>
         <tr><td><code>--version</code> (all 4 CLI binaries)</td><td class="status yes">Implemented</td><td><code>ansible</code>, <code>ansible-playbook</code>, <code>ansible-vault</code>, <code>ansible-galaxy</code> all print a version string and exit 0</td></tr>
         <tr><td><code>strategy</code></td><td class="status no">Not yet</td><td>Anything other than <code>linear</code> (or unset) is rejected with an explicit parse error — never silently accepted and ignored</td></tr>
-        <tr><td><code>import_playbook</code></td><td class="status no">Not yet</td><td>Not implemented — a top-level playbook-list entry must be a play with <code>hosts:</code>, so an <code>import_playbook:</code> entry fails to parse rather than importing</td></tr>
+        <tr><td><code>import_playbook</code></td><td class="status yes">Implemented</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
         <tr><td>Nested role variable scoping</td><td class="status no">Documented limit</td><td>Single-level save/restore only: a role included from inside another role's own tasks leaves its vars/defaults in place for the rest of the outer role, rather than being scoped to just the inner role</td></tr>
         <tr><td><code>register:</code> on a <code>setup:</code>/<code>gather_facts:</code> task</td><td class="status no">Documented limit</td><td>The registered variable holds the facts flat, not nested under <code>ansible_facts</code> — the common bare <code>ansible_facts.X</code> access (via automatic per-host fact injection) works fine regardless</td></tr>
       </tbody>
@@ -222,10 +222,9 @@
       playbook-engine directives too (<code>add_host</code>, <code>group_by</code>,
       <code>import_playbook</code>, <code>import_role</code>, <code>import_tasks</code>,
       <code>include_role</code>, <code>include_tasks</code>, <code>include_vars</code>, <code>meta</code>),
-      8 of those 9 are wired directly into the playbook engine (see the feature matrix above) —
-      only <code>import_playbook</code> is not. That's <strong>70 of 71</strong> ansible.builtin
-      items, module and directive alike, for real — this port now targets full ansible.builtin
-      parity, not the smaller core subset once scoped for it.</p>
+      all 9 are wired directly into the playbook engine (see the feature matrix above). That's
+      <strong>71 of 71</strong> ansible.builtin items, module and directive alike, for real — this
+      port now targets full ansible.builtin parity, not the smaller core subset once scoped for it.</p>
 
     <h2 class="section">Dependencies</h2>
     <p class="principles">The low-level connection layer — SSH, local execution, become/sudo — lives
