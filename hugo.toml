@@ -1,0 +1,38 @@
+baseURL = "https://go-ansible.github.io/"
+title = "go-ansible"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+# Each repo card. "kind" says what layer it is; "type" says whether it is a
+# library you import or a service you run. "result" is the honest headline —
+# what is proven, and by what.
+[[params.repos]]
+  name = "vault"
+  what = "Ansible Vault-compatible AES256 encryption"
+  kind = "crypto"
+  type = "lib"
+  proof = "encrypt with go-ansible/vault, decrypt with the real ansible-vault, and back"
+  result = "Reads and writes the Ansible Vault 1.1 file format byte-for-byte: AES-256-CTR with a PBKDF2-HMAC-SHA256 derived key and an encrypt-then-MAC HMAC-SHA256 tag, hex-wrapped at 80 columns — the exact wire format of ansible.parsing.vault.VaultAES256, not a reinterpretation of it. Decryption fails closed on a bad HMAC with a constant-time comparison, before ever touching the ciphertext."
+[[params.repos]]
+  name = "inventory"
+  what = "INI/YAML inventory parsing, groups, host patterns"
+  kind = "data"
+  type = "lib"
+  proof = "group_vars/host_vars merge order and ancestor precedence match ansible-inventory"
+  result = "Parses Ansible-compatible INI and YAML inventories — single file or a directory of them — into the same group/host graph Ansible builds: group_vars and host_vars merged in, ancestor groups resolved in the order that makes a child group's vars win over its parent's, and \"ungrouped\"/\"all\" computed the way Ansible computes them. Ships Ansible's own host-pattern language too: globs, numeric ranges, and colon/comma combinations with ! exclusion and & intersection."
+[[params.repos]]
+  name = "vars"
+  what = "Ansible's variable precedence ladder"
+  kind = "engine"
+  type = "lib"
+  proof = "an order-faithful subset of ansible-core's ~22 precedence levels"
+  result = "Implements Ansible's variable precedence as a fixed ladder of named layers — role defaults up through play/role/block/task vars, registered vars, role params, and -e/--extra-vars — merged low to high so a value set higher always wins. Doesn't know about roles or plays itself; a playbook engine assigns each layer's content, this package only owns the merge order, plus a Which(key) call that answers \"why did this variable win?\"."
+[[params.repos]]
+  name = "template"
+  what = "Jinja2-compatible templating + Ansible's filters/tests"
+  kind = "engine"
+  type = "lib"
+  proof = "a bare {{ expr }} renders to its native type, not a stringified one — Ansible's own rule"
+  result = "Renders Ansible-flavored Jinja2 on top of a Jinja2-compatible engine: string interpolation, control structures, and Ansible's own filter and test library (to_json/from_yaml, regex_* backed by a PCRE-compatible engine, b64encode, combine, and more) layered on Jinja2's built-ins. Implements the one rule that trips up naive ports: a value that is a single {{ expr }} with nothing else around it renders to the expression's native type — a list, a dict, an int — not a string."
