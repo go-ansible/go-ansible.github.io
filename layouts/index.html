@@ -218,6 +218,28 @@
       a project-neutral package shared with <a href="https://github.com/go-puppet-bolt">go-puppet-bolt/bolt</a>.
       <code>modules</code>, <code>playbook</code>, and <code>cli</code> depend on it directly rather than
       shipping their own transport.</p>
+
+    <h2 class="section">Benchmarks</h2>
+    <p class="principles">Real, measured numbers against a real <code>ansible-core</code> install — one
+      machine, N=10 runs, first discarded as warm-up, <code>ansible_connection: local</code> on both
+      sides. Full methodology, every command, and the caveats in
+      <a href="https://github.com/go-ansible/.github/blob/main/BENCHMARKS.md">BENCHMARKS.md</a>.</p>
+    <div class="matrix-wrap">
+    <table class="matrix">
+      <thead><tr><th>Measure</th><th>go-ansible</th><th>real ansible-core</th></tr></thead>
+      <tbody>
+        <tr><td>Control-node footprint</td><td class="status yes">~14M static binary (9.5M stripped)</td><td class="status no">~132M (51M venv + 81M Python interpreter it needs)</td></tr>
+        <tr><td>8-task playbook, median wall clock</td><td class="status yes">25ms</td><td class="status no">1694ms (~68× slower)</td></tr>
+        <tr><td>Process-startup cost alone (1-task no-op)</td><td class="status yes">7ms</td><td class="status no">300ms</td></tr>
+        <tr><td>Minimal working container</td><td class="status yes"><code>FROM scratch</code>, 21.3MB, runs and exits 0</td><td class="status no"><code>python:3.13-slim</code> + pip install, 284MB — <code>scratch</code> is not reachable at all</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="principles">The <code>FROM scratch</code> proof has a real limit, reported rather than
+      smoothed over: <code>command</code>/<code>shell</code> tasks fork <code>/bin/sh</code>, which
+      <code>scratch</code> doesn't have, so those specific modules need a shell-bearing base
+      (e.g. <code>busybox:musl</code>) even though every module that runs entirely on the controller —
+      <code>debug</code>, <code>set_fact</code>, and others — works in true <code>scratch</code> today.</p>
   </main>
 
   <footer class="wrap">
