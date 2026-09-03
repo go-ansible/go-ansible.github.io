@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ .Site.Title }} — a pure-Go, functional-parity port of Ansible</title>
-<meta name="description" content="A pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, module execution, fact gathering, the playbook engine, and the four ansible-* CLI binaries. No Python, no C extensions, one static binary.">
+<meta name="description" content="A pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, module execution, fact gathering, the playbook engine, and all 8 ansible-* CLI binaries. No Python, no C extensions, one static binary.">
 <style>
   :root {
     --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
@@ -116,13 +116,14 @@
     <h1>go-ansible</h1>
     <p class="tagline">A pure-Go, <strong>functional-parity port of Ansible</strong> — Vault-compatible
       encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating,
-      module execution, fact gathering, the playbook engine, and all four <code>ansible-*</code> CLI
+      module execution, fact gathering, the playbook engine, and all 8 <code>ansible-*</code> CLI
       binaries, with <strong>no Python, no C extensions, and one static binary</strong>.</p>
     <div class="pills">
       <span class="pill">CGO_ENABLED=0</span>
       <span class="pill">byte-compatible with <code>ansible-vault</code></span>
       <span class="pill">real per-host playbook execution</span>
-      <span class="pill">4 CLI binaries</span>
+      <span class="pill">8 CLI binaries</span>
+      <span class="pill">126 modules</span>
       <span class="pill">amd64 · arm64 · riscv64 · loong64 · ppc64le · s390x</span>
       <span class="pill">BSD-3-Clause</span>
     </div>
@@ -148,9 +149,9 @@
       doesn't cover today, re-checked against the code rather than assumed.</p>
 
     <div class="counts">
-      <div class="count-tile"><span class="n">62 / 62</span><span class="l">ansible.builtin modules implemented</span></div>
       <div class="count-tile"><span class="n">71 / 71</span><span class="l">full ansible.builtin surface (modules + directives)</span></div>
-      <div class="count-tile"><span class="n">8</span><span class="l">core repositories, all tagged</span></div>
+      <div class="count-tile"><span class="n">126</span><span class="l">modules registered (builtin + posix + community.general batch 1)</span></div>
+      <div class="count-tile"><span class="n">8</span><span class="l">CLI binaries, all shipped</span></div>
       <div class="count-tile"><span class="n">6</span><span class="l">CPU architectures, race-clean</span></div>
     </div>
 
@@ -200,7 +201,7 @@
         <tr><td><code>group_by</code></td><td class="status yes">Implemented</td><td>Adds the current host to an inventory group mid-run</td></tr>
         <tr><td><code>include_vars</code></td><td class="status yes">Implemented</td><td>Loads a YAML file's keys into the host's vars, bare-name accessible like <code>set_fact</code></td></tr>
         <tr><td><code>inventory_hostname</code> / <code>playbook_dir</code></td><td class="status yes">Implemented</td><td>Set as magic variables after host_vars, so a same-named host_var can't shadow them</td></tr>
-        <tr><td><code>--version</code> (all 4 CLI binaries)</td><td class="status yes">Implemented</td><td><code>ansible</code>, <code>ansible-playbook</code>, <code>ansible-vault</code>, <code>ansible-galaxy</code> all print a version string and exit 0</td></tr>
+        <tr><td><code>--version</code> (all 8 CLI binaries)</td><td class="status yes">Implemented</td><td><code>ansible</code>, <code>ansible-playbook</code>, <code>ansible-vault</code>, <code>ansible-galaxy</code>, <code>ansible-pull</code>, <code>ansible-doc</code>, <code>ansible-config</code>, <code>ansible-console</code> all print a version string and exit 0</td></tr>
         <tr><td><code>strategy</code></td><td class="status no">Not yet</td><td>Anything other than <code>linear</code> (or unset) is rejected with an explicit parse error — never silently accepted and ignored</td></tr>
         <tr><td><code>import_playbook</code></td><td class="status yes">Implemented</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
         <tr><td>Nested role variable scoping</td><td class="status no">Documented limit</td><td>Single-level save/restore only: a role included from inside another role's own tasks leaves its vars/defaults in place for the rest of the outer role, rather than being scoped to just the inner role</td></tr>
@@ -208,23 +209,32 @@
       </tbody>
     </table>
     </div>
-    <p class="principles">Also out of scope today: the collections/namespace system, dynamic inventory
-      plugins, lookup/callback plugins, <code>ansible.cfg</code>, and four of Ansible's own CLI tools
-      (<code>ansible-doc</code>, <code>ansible-config</code>, <code>ansible-pull</code>,
-      <code>ansible-console</code>). <code>ansible-galaxy</code> here only clones a role from a git URL —
-      no galaxy.ansible.com API, no collections. This matrix reflects the code as read on 2026-09-02;
-      engine work is active in parallel, so treat it as a snapshot, not a promise.</p>
+    <p class="principles">Also out of scope today: the namespace/collection metadata system, dynamic
+      inventory plugins, lookup/callback plugins, and <code>ansible.cfg</code> file support (though
+      <code>ansible-config</code> does read real <code>ANSIBLE_*</code> environment variables).
+      <code>ansible-galaxy</code> here only clones a role from a git URL — no galaxy.ansible.com API,
+      no collection installs. This matrix reflects the code as read on 2026-09-03; engine work is
+      active in parallel, so treat it as a snapshot, not a promise.</p>
 
     <h2 class="section">Module coverage</h2>
-    <p class="principles"><code>modules/registry.go</code> registers <strong>62</strong> module
-      names — the full set of ansible.builtin's real modules — run against a live
-      <code>go-remoteexec/transport</code> connection. Counting ansible.builtin's 9 non-module
-      playbook-engine directives too (<code>add_host</code>, <code>group_by</code>,
+    <p class="principles"><code>modules/registry.go</code> registers <strong>126</strong> module
+      names in total, each running against a live <code>go-remoteexec/transport</code> connection.
+      All 62 of <code>ansible.builtin</code>'s real modules are there, plus its 9 non-module
+      playbook-engine directives (<code>add_host</code>, <code>group_by</code>,
       <code>import_playbook</code>, <code>import_role</code>, <code>import_tasks</code>,
-      <code>include_role</code>, <code>include_tasks</code>, <code>include_vars</code>, <code>meta</code>),
-      all 9 are wired directly into the playbook engine (see the feature matrix above). That's
-      <strong>71 of 71</strong> ansible.builtin items, module and directive alike, for real — this
-      port now targets full ansible.builtin parity, not the smaller core subset once scoped for it.</p>
+      <code>include_role</code>, <code>include_tasks</code>, <code>include_vars</code>, <code>meta</code>)
+      wired directly into the playbook engine (see the feature matrix above) — <strong>71 of 71</strong>
+      ansible.builtin items, module and directive alike, for real. Beyond builtin: all
+      <strong>14</strong> of <code>ansible.posix</code> (<code>synchronize</code> is an honest,
+      always-failing stub — real <code>synchronize</code> runs rsync from the controller directly
+      against the target's own SSH endpoint, which this port's connection abstraction can't expose
+      from inside a module), and a curated first batch of <strong>50 of community.general's 577</strong>
+      modules — package managers, language/dev tooling, filesystem/data, system config, and a handful
+      of misc modules, deliberately excluding SaaS-API wrappers (Slack, PagerDuty, GitLab, Jenkins,
+      and similar) and cloud-VPS providers (Scaleway, Linode, OpenNebula, and similar) that need real
+      API client SDKs rather than shell composition over a connection. ~527 more community.general
+      modules, and every cloud-provider collection (amazon.aws/azure/google.cloud and similar — a
+      fundamentally different kind of work, not yet started), remain unported.</p>
 
     <h2 class="section">Dependencies</h2>
     <p class="principles">The low-level connection layer — SSH, local execution, become/sudo — lives
