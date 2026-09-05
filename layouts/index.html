@@ -123,7 +123,7 @@
       <span class="pill">byte-compatible with <code>ansible-vault</code></span>
       <span class="pill">real per-host playbook execution</span>
       <span class="pill">8 CLI binaries</span>
-      <span class="pill">542 modules</span>
+      <span class="pill">552 modules</span>
       <span class="pill">amd64 · arm64 · riscv64 · loong64 · ppc64le · s390x</span>
       <span class="pill">BSD-3-Clause</span>
     </div>
@@ -150,7 +150,7 @@
 
     <div class="counts">
       <div class="count-tile"><span class="n">71 / 71</span><span class="l">full ansible.builtin surface (modules + directives)</span></div>
-      <div class="count-tile"><span class="n">542</span><span class="l">modules registered (builtin + posix + community.general batches 1-10)</span></div>
+      <div class="count-tile"><span class="n">552</span><span class="l">modules registered (builtin + posix + community.general batches 1-11)</span></div>
       <div class="count-tile"><span class="n">8</span><span class="l">CLI binaries, all shipped</span></div>
       <div class="count-tile"><span class="n">6</span><span class="l">CPU architectures, race-clean</span></div>
     </div>
@@ -217,7 +217,7 @@
       active in parallel, so treat it as a snapshot, not a promise.</p>
 
     <h2 class="section">Module coverage</h2>
-    <p class="principles"><code>modules/registry.go</code> registers <strong>542</strong> module
+    <p class="principles"><code>modules/registry.go</code> registers <strong>552</strong> module
       names in total, each running against a live <code>go-remoteexec/transport</code> connection.
       All 62 of <code>ansible.builtin</code>'s real modules are there, plus its 9 non-module
       playbook-engine directives (<code>add_host</code>, <code>group_by</code>,
@@ -228,7 +228,7 @@
       <strong>14</strong> of <code>ansible.posix</code> (<code>synchronize</code> is an honest,
       always-failing stub — real <code>synchronize</code> runs rsync from the controller directly
       against the target's own SSH endpoint, which this port's connection abstraction can't expose
-      from inside a module), and ten curated batches of <strong>466 of community.general's 577</strong>
+      from inside a module), and eleven curated batches of <strong>476 of community.general's 577</strong>
       modules — package managers (including <code>bower</code>/<code>easy_install</code>), language/dev tooling, filesystem/storage (including <code>file_remove</code>), networking, system/service
       management, SELinux, read-only facts, Pacemaker cluster management (including stonith/fencing),
       LDAP, FreeIPA, Redis, Consul,
@@ -240,7 +240,11 @@
       Heroku, Mattermost, New Relic, DNSimple, ipinfo.io, Cloudflare, OVHcloud, Dell EMC VNX, IBM
       Spectrum Accelerate, HPE 3PAR, the Redfish hardware-vendor family (Dell iDRAC via
       <code>racadm</code>, HPE iLO via <code>ilorest</code>, Lenovo XCC via <code>OneCli</code>),
-      <code>hponcfg</code> (HP's own local iLO config binary, not a substitution),
+      <code>hponcfg</code> (HP's own local iLO config binary, not a substitution), Jira (via
+      Atlassian's <code>acli</code>, Jira Cloud only), Honeybadger (via <code>hb</code>), Rollbar
+      (via <code>rollbar-cli</code>), Memset (via <code>ma-shell</code>),
+      <code>ansible_galaxy_install</code> (also not a substitution — shells out to
+      <code>ansible-galaxy</code> directly),
       and a handful of misc modules, deliberately excluding SaaS-API wrappers with no comparable
       official CLI (Slack, PagerDuty, Datadog, and similar) — <strong>except</strong> GitHub, GitLab,
       Keycloak, and Jenkins, whose official <code>gh</code>/<code>glab</code>/<code>kcadm.sh</code>/
@@ -258,7 +262,10 @@
       to have no usable official CLI for what their modules need — Pritunl (org/user management, four
       modules) and two of OVHcloud's three modules (<code>ovh_monthly_billing</code> has full coverage)
       — all fail loud rather than
-      fake parity, confirmed gaps rather than assumed ones. ~111 more community.general
+      fake parity, confirmed gaps rather than assumed ones. <code>rollbar-cli</code> and
+      <code>ma-shell</code> were both confirmed, by reading their real source, to have no
+      environment-variable alternative to their access-token/API-key argv flag — a documented,
+      unavoidable exception to this project's own no-secrets-in-argv rule. ~101 more community.general
       modules remain — an increasingly SaaS-only remainder — plus every
       cloud-provider collection (amazon.aws/azure/google.cloud and similar — a
       fundamentally different kind of work, not yet started), remain unported.</p>
