@@ -202,10 +202,10 @@
         <tr><td><code>include_vars</code></td><td class="status yes">Implemented</td><td>Loads a YAML file's keys into the host's vars, bare-name accessible like <code>set_fact</code></td></tr>
         <tr><td><code>inventory_hostname</code> / <code>playbook_dir</code></td><td class="status yes">Implemented</td><td>Set as magic variables after host_vars, so a same-named host_var can't shadow them</td></tr>
         <tr><td><code>--version</code> (all 8 CLI binaries)</td><td class="status yes">Implemented</td><td><code>ansible</code>, <code>ansible-playbook</code>, <code>ansible-vault</code>, <code>ansible-galaxy</code>, <code>ansible-pull</code>, <code>ansible-doc</code>, <code>ansible-config</code>, <code>ansible-console</code> all print a version string and exit 0</td></tr>
-        <tr><td><code>strategy</code></td><td class="status no">Not yet</td><td>Anything other than <code>linear</code> (or unset) is rejected with an explicit parse error — never silently accepted and ignored</td></tr>
+        <tr><td><code>strategy</code></td><td class="status yes">Implemented</td><td><code>linear</code> (default) and <code>free</code> — with <code>free</code>, each host runs its whole task list and its own notified handlers independently, with no per-task barrier across hosts. Any other named strategy (<code>debug</code>, <code>host_pinned</code>, a strategy plugin) is still rejected with an explicit parse error, never silently accepted</td></tr>
         <tr><td><code>import_playbook</code></td><td class="status yes">Implemented</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
-        <tr><td>Nested role variable scoping</td><td class="status no">Documented limit</td><td>Single-level save/restore only: a role included from inside another role's own tasks leaves its vars/defaults in place for the rest of the outer role, rather than being scoped to just the inner role</td></tr>
-        <tr><td><code>register:</code> on a <code>setup:</code>/<code>gather_facts:</code> task</td><td class="status no">Documented limit</td><td>The registered variable holds the facts flat, not nested under <code>ansible_facts</code> — the common bare <code>ansible_facts.X</code> access (via automatic per-host fact injection) works fine regardless</td></tr>
+        <tr><td>Nested role variable scoping</td><td class="status yes">Implemented</td><td>Composes to any depth: a role included from inside another role's own tasks merges its own defaults/vars on top of the enclosing role's, instead of replacing them outright, restoring exactly the prior state once its block ends — verified against a real <code>ansible-playbook</code> run</td></tr>
+        <tr><td><code>register:</code> on a <code>setup:</code>/<code>set_fact:</code> task</td><td class="status yes">Implemented</td><td>Nests the result under <code>ansible_facts</code>, matching real Ansible's registered-result shape exactly — verified against a real <code>ansible-playbook</code> run</td></tr>
       </tbody>
     </table>
     </div>
@@ -213,7 +213,7 @@
       inventory plugins, lookup/callback plugins, and <code>ansible.cfg</code> file support (though
       <code>ansible-config</code> does read real <code>ANSIBLE_*</code> environment variables).
       <code>ansible-galaxy</code> here only clones a role from a git URL — no galaxy.ansible.com API,
-      no collection installs. This matrix reflects the code as read on 2026-09-03; engine work is
+      no collection installs. This matrix reflects the code as read on 2026-09-06; engine work is
       active in parallel, so treat it as a snapshot, not a promise.</p>
 
     <h2 class="section">Module coverage</h2>
