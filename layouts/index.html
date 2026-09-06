@@ -206,12 +206,20 @@
         <tr><td><code>import_playbook</code></td><td class="status yes">Implemented</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
         <tr><td>Nested role variable scoping</td><td class="status yes">Implemented</td><td>Composes to any depth: a role included from inside another role's own tasks merges its own defaults/vars on top of the enclosing role's, instead of replacing them outright, restoring exactly the prior state once its block ends — verified against a real <code>ansible-playbook</code> run</td></tr>
         <tr><td><code>register:</code> on a <code>setup:</code>/<code>set_fact:</code> task</td><td class="status yes">Implemented</td><td>Nests the result under <code>ansible_facts</code>, matching real Ansible's registered-result shape exactly — verified against a real <code>ansible-playbook</code> run</td></tr>
+        <tr><td>Fully-qualified collection names</td><td class="status yes">Implemented</td><td><code>ansible.builtin.copy</code>, <code>community.general.ufw</code>, and the other three known collection prefixes resolve exactly like their bare form, for modules and the 9 playbook-engine directives alike</td></tr>
+        <tr><td><code>until</code> / <code>retries</code> / <code>delay</code></td><td class="status yes">Implemented</td><td>Retries a task against a condition; deliberately reproduces a genuine off-by-one bug in real <code>ansible-core</code>'s own retry loop (the registered <code>attempts</code> undercounts by one on exhaustion) rather than "fixing" it</td></tr>
+        <tr><td><code>run_once</code></td><td class="status yes">Implemented</td><td>Restricts actual module execution to one host in the batch and broadcasts its <code>register:</code> value to the rest — not coordinated across <code>strategy: free</code>'s independent per-host lanes</td></tr>
+        <tr><td><code>Engine.Forks</code> / <code>--forks</code></td><td class="status yes">Implemented</td><td>Real concurrency cap on per-host execution, default 5 (<code>ANSIBLE_FORKS</code>), matching real Ansible's own default</td></tr>
+        <tr><td><code>vars_prompt</code></td><td class="status yes">Implemented</td><td>Prompts interactively for each named var; <code>private</code> defaults to <code>true</code> (masked input); a var already set via <code>-e</code>/extra-vars skips its prompt entirely, matching real Ansible's <code>preprocess_vars</code></td></tr>
+        <tr><td>Dynamic inventory scripts</td><td class="status yes">Implemented</td><td>An executable inventory path runs as a script against the real <code>--list</code>/<code>--host &lt;name&gt;</code> JSON protocol, including the <code>_meta.hostvars</code> optimization and both the shorthand-array and full-object group forms</td></tr>
+        <tr><td><code>ansible.cfg</code> file</td><td class="status yes">Implemented</td><td>The <code>[defaults]</code> section is read for the settings this port supports, at the precedence real Ansible uses: host var &gt; environment variable &gt; <code>ansible.cfg</code> &gt; compiled default; discovery order is <code>$ANSIBLE_CONFIG</code> &gt; <code>./ansible.cfg</code> &gt; <code>~/.ansible.cfg</code> &gt; <code>/etc/ansible/ansible.cfg</code>, first found wins outright</td></tr>
+        <tr><td><code>async</code> / <code>poll</code></td><td class="status yes">Implemented</td><td>Really backgrounds a job on the target's filesystem (<code>~/.ansible_async/&lt;jid&gt;</code>) for <code>command</code>/<code>shell</code> — the only two modules whose whole job reduces to one remote invocation — surviving the connection closing; a real, disclosed limitation: an overrunning job is not actively killed on timeout the way real Ansible's <code>async_wrapper.py</code> does, since POSIX process-group kill needs <code>setsid</code>, absent on macOS</td></tr>
       </tbody>
     </table>
     </div>
-    <p class="principles">Also out of scope today: the namespace/collection metadata system, dynamic
-      inventory plugins, lookup/callback plugins, and <code>ansible.cfg</code> file support (though
-      <code>ansible-config</code> does read real <code>ANSIBLE_*</code> environment variables).
+    <p class="principles">Also out of scope today: the namespace/collection metadata system,
+      Python-style inventory <em>plugins</em> (executable inventory <em>scripts</em> are supported,
+      see the row above), and lookup/callback plugins.
       <code>ansible-galaxy</code> here only clones a role from a git URL — no galaxy.ansible.com API,
       no collection installs. This matrix reflects the code as read on 2026-09-06; engine work is
       active in parallel, so treat it as a snapshot, not a promise.</p>
@@ -275,7 +283,9 @@
       unavoidable exception to this project's own no-secrets-in-argv rule. ~92 more community.general
       modules remain — an increasingly SaaS-only remainder — plus every
       cloud-provider collection (amazon.aws/azure/google.cloud and similar — a
-      fundamentally different kind of work, not yet started), remain unported.</p>
+      fundamentally different kind of work, not yet started), the namespace/collection metadata
+      system, real <code>ansible-galaxy collection install</code> (this port's <code>ansible-galaxy</code>
+      only clones a role from a git URL), and lookup/callback plugins, remain unported.</p>
 
     <h2 class="section">Dependencies</h2>
     <p class="principles">The low-level connection layer — SSH, local execution, become/sudo — lives
