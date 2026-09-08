@@ -286,11 +286,10 @@
       Sessions, Update, Manager — now complete, every real Manager command wired — Service) — a
       genuine, real credential-bearing substitution (unlike the vendor CLIs' local-only, ignored
       baseuri/username/password), shipped incrementally with each real gap disclosed rather than
-      approximated (virtual media, storage/RAID config, <code>redfish_info</code>'s own remaining
-      storage inventory commands (a deep, dual-code-path traversal covering both the modern Storage
-      resource shape and the older SimpleStorage one), BIOS registries (needs vendor-aware HPE
-      iLO4/iLO5 workarounds this port has no hardware to verify against), a few
-      Chassis-specific/HPE-specific commands, and <code>GetUpdateStatus</code> specifically — blocked on
+      approximated (virtual media, storage/RAID config, BIOS registries (needs vendor-aware HPE
+      iLO4/iLO5 workarounds this port has no hardware to verify against — the last unwired Systems
+      command in <code>redfish_info</code>, which is otherwise complete: 13 of 14 real commands), a
+      few Chassis-specific/HPE-specific commands, and <code>GetUpdateStatus</code> specifically — blocked on
       redfishtool's own <code>raw</code> subcommand exposing only a JSON body, never the HTTP status
       code real Ansible's own status logic needs). Two platforms were investigated and found
       to have no usable official CLI for what their modules need — Pritunl (org/user management, four
