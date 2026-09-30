@@ -3,229 +3,126 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ .Site.Title }} — a pure-Go, functional-parity port of Ansible</title>
-<meta name="description" content="A pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, module execution, fact gathering, the playbook engine, and all 8 ansible-* CLI binaries. No Python, no C extensions, one static binary.">
-<style>
-  :root {
-    --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
-    --border: #d0d7de; --accent: #2563EB; --accent-fg: #ffffff;
-    --crypto: #4F46E5; --data: #0891B2; --engine: #2563EB;
-    --exec: #B45309; --probe: #15803D; --cli: #BE185D;
-    --yes: #15803D; --no: #B45309;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) {
-      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
-      --border: #30363d; --accent: #60A5FA; --accent-fg: #0d1117;
-      --crypto: #A5B4FC; --data: #67E8F9; --engine: #93C5FD;
-      --exec: #FCD34D; --probe: #86EFAC; --cli: #F9A8D4;
-      --yes: #86EFAC; --no: #FCD34D;
-    }
-  }
-  /* Forced dark (manual toggle wins over the OS preference). */
-  :root[data-theme="dark"] {
-  --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --card: #161b22;
-  --border: #30363d; --accent: #60A5FA; --accent-fg: #0d1117;
-  --crypto: #A5B4FC; --data: #67E8F9; --engine: #93C5FD;
-  --exec: #FCD34D; --probe: #86EFAC; --cli: #F9A8D4;
-  --yes: #86EFAC; --no: #FCD34D;
-  }
-  /* Forced light (manual toggle wins over the OS preference). */
-  :root[data-theme="light"] {
-  --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
-  --border: #d0d7de; --accent: #2563EB; --accent-fg: #ffffff;
-  --crypto: #4F46E5; --data: #0891B2; --engine: #2563EB;
-  --exec: #B45309; --probe: #15803D; --cli: #BE185D;
-  --yes: #15803D; --no: #B45309;
-  }
-  .theme-toggle {
-    position: fixed; top: 14px; right: 14px; z-index: 10;
-    font: inherit; font-size: .8rem; cursor: pointer; padding: 6px 12px;
-    color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
-  }
-  .theme-toggle:hover { border-color: var(--accent); }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--fg);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
-  header { padding: 72px 0 32px; text-align: center; }
-  .logo { width: 88px; height: 88px; margin: 0 auto 18px; display: block; }
-  h1 { font-size: 2.6rem; margin: 0 0 .3em; letter-spacing: -.02em; }
-  .tagline { font-size: 1.2rem; color: var(--muted); margin: 0 auto; max-width: 680px; }
-  .pills { margin: 22px 0 0; }
-  .pill {
-    display: inline-block; margin: 4px; padding: 3px 10px; font-size: .82rem;
-    color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
-  }
-  .cta { margin: 30px 0 0; }
-  .btn {
-    display: inline-block; padding: 10px 18px; margin: 4px; border-radius: 8px; text-decoration: none;
-    font-weight: 600; border: 1px solid var(--border);
-  }
-  .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-  .btn.ghost { color: var(--fg); background: transparent; }
-  .lead { color: var(--fg); max-width: 800px; margin: 8px auto 0; text-align: center; }
-  .lead code { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
-  h2.section { text-align: center; margin: 40px 0 4px; font-size: 1.4rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding: 16px 0 8px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; }
-  .card h3 { margin: 0 0 .35em; font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
-  .card h3 a { text-decoration: none; }
-  .card .accel { color: var(--muted); font-size: .85rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0 0 .6em; }
-  .card p { margin: 0 0 .8em; color: var(--fg); font-size: .95rem; }
-  .card .badges { margin-top: auto; }
-  .card .badges img { height: 20px; vertical-align: middle; }
-  .kind { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
-  .kind.crypto { color: var(--crypto); }
-  .kind.data { color: var(--data); }
-  .kind.engine { color: var(--engine); }
-  .kind.exec { color: var(--exec); }
-  .kind.probe { color: var(--probe); }
-  .kind.cli { color: var(--cli); }
-  .card h3 .tags { display: inline-flex; gap: 6px; }
-  .type { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); }
-  .type.lib { color: var(--accent); border-color: var(--accent); }
-  .type.cli { color: var(--accent-fg); background: var(--accent); border-color: var(--accent); }
-  .principles { color: var(--muted); text-align: center; padding: 10px 0 0; max-width: 820px; margin: 0 auto; }
-  table.matrix { width: 100%; border-collapse: collapse; margin: 8px 0 24px; font-size: .92rem; }
-  table.matrix th, table.matrix td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
-  table.matrix th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
-  table.matrix td.status { white-space: nowrap; font-weight: 600; }
-  table.matrix td.status.yes { color: var(--yes); }
-  table.matrix td.status.no { color: var(--no); }
-  .matrix-wrap { overflow-x: auto; }
-  .counts { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin: 8px 0 28px; }
-  .count-tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 22px; text-align: center; min-width: 160px; }
-  .count-tile .n { font-size: 1.8rem; font-weight: 700; display: block; }
-  .count-tile .l { color: var(--muted); font-size: .82rem; }
-  footer { color: var(--muted); text-align: center; padding: 40px 0 56px; font-size: .9rem; }
-  a { color: var(--accent); }
-</style>
+{{/* The <head> is localised deliberately. go-fileshare's own layout — the one
+     this page is now shaped after — carries a warning here: its title and
+     description described go-AUTHN for as long as the site existed, because
+     the page was seeded from that org and these two lines were never changed.
+     They are the two lines a reader never looks at and a build never checks,
+     so they are exactly the ones a reformat drops. */}}
+<title>{{ .Site.Title }} — Ansible's engine, without Python</title>
+<meta name="description" content="go-ansible is a pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, 566 modules, fact gathering, the playbook engine, and nine of its eleven ansible-* binaries. No Python, no C extensions, one static binary — and a parity matrix that says which playbook keywords are honoured rather than merely parsed.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<script>
-  // Apply the saved theme before first paint to avoid a flash; "system" leaves no attribute.
-  (function(){var m=localStorage.getItem('theme');if(m&&m!=='system')document.documentElement.setAttribute('data-theme',m);})();
-</script>
+{{ partial "styles.html" . }}
 </head>
-<body>
-  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light, dark or system theme"><span id="theme-label">🖥️ System</span></button>
-  <header class="wrap">
-    <img class="logo" src="/img/logo.svg" alt="go-ansible logo" width="88" height="88">
-    <h1>go-ansible</h1>
-    <p class="tagline">A pure-Go, <strong>functional-parity port of Ansible</strong> — Vault-compatible
-      encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating,
-      module execution, fact gathering, the playbook engine, and all 8 <code>ansible-*</code> CLI
-      binaries, with <strong>no Python, no C extensions, and one static binary</strong>.</p>
-    <div class="pills">
-      <span class="pill">CGO_ENABLED=0</span>
-      <span class="pill">byte-compatible with <code>ansible-vault</code></span>
-      <span class="pill">real per-host playbook execution</span>
-      <span class="pill">8 CLI binaries</span>
-      <span class="pill">566 modules</span>
-      <span class="pill">amd64 · arm64 · riscv64 · loong64 · ppc64le · s390x</span>
-      <span class="pill">BSD-3-Clause</span>
+<body class="lm">
+  <header class="nav"><div class="wrap">
+    <a class="brand" href="/"><img class="glyph" src="/img/logo.svg" width="32" height="32" alt="go-ansible logo"> go-ansible</a>
+    <nav><a href="#parity">Parity</a><a href="#coverage">Coverage</a><a href="#why">Why</a><a href="#bench">Benchmarks</a><a href="#eco">Repositories</a></nav>
+    {{ partial "theme-toggle.html" . }}
+    <a class="btn btn-ghost" href="https://github.com/go-ansible">GitHub</a>
+  </div></header>
+
+  <div class="hero"><div class="wrap">
+    <div>
+      <h1 class="head">Ansible's engine,<br><span class="accent">without Python.</span></h1>
+      <p class="sub"><b>Ansible's engine is a Python program that needs a matching interpreter on the control node.</b> go-ansible reimplements it as importable Go packages rather than wrapping the Python binary — the same wire formats, the same merge orders, the same rendering rules, compiled into one static executable. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://go-ansible.github.io/docs/">Read the documentation →</a>
+        <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">Browse the source</a>
+      </div>
+      <div class="trust"><span><b>566</b> modules</span><span><b>9</b> CLI binaries</span><span><b>CGO=0</b> one static binary</span></div>
     </div>
-    <div class="cta">
-      <a class="btn primary" href="https://go-ansible.github.io/docs/">Documentation</a>
-      <a class="btn ghost" href="https://github.com/go-ansible">GitHub</a>
+    <div class="term">
+      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="t">ansible-playbook — zsh</span></div>
+{{/* Real transcript, captured from the built binary against a real local
+     connection: facts gathered by a shell probe, a file written, a loop
+     registered and read back. Run twice — `write a file` reports changed on
+     the first pass and ok on the second, which is what idempotency looks like
+     from outside. The command loop stays changed both times, because `command`
+     is not idempotent and saying otherwise would be the lie. */}}
+<pre><span class="c-cmd">$ ansible-playbook</span> -i hosts site.yml
+<span class="c-out">TASK [Gathering Facts]</span>
+<span class="c-key">ok: [localhost]</span>
+<span class="c-out">TASK [the fact gathering was real]</span>
+<span class="c-key">ok: [localhost]</span> =&gt; {"msg": <span class="c-str">"Darwin / arm64"</span>}
+<span class="c-out">TASK [write a file]</span>
+<span class="c-num">changed: [localhost]</span>
+<span class="c-out">TASK [loop, with a registered result]</span>
+<span class="c-num">changed: [localhost] =&gt; (item=alpha)
+changed: [localhost] =&gt; (item=beta)</span>
+
+<span class="c-com"># run it again — the copy is idempotent, the command is not</span>
+<span class="c-out">TASK [write a file]</span>
+<span class="c-key">ok: [localhost]</span></pre>
     </div>
-  </header>
+  </div></div>
 
-  <main class="wrap">
-    <p class="lead">Ansible's own engine is a Python program that shells out to modules and needs a
-      matching interpreter on the control node. <strong>go-ansible reimplements that engine as
-      importable Go packages instead of wrapping the Python binary</strong> — the same wire formats,
-      merge orders, and rendering rules, compiled into a single static executable with no interpreter
-      to install and no C toolchain to cross-compile against.</p>
+  <div class="strip"><div class="wrap">
+    {{/* DERIVED from the repo list, never typed beside it: a count written next
+         to the data it counts disagrees with it eventually, and nothing fails
+         when it does. */}}
+    <span class="lead-line">{{ len .Site.Params.repos }} repositories — <b>one engine in importable pieces</b>, not one binary that hides them</span>
+    <div class="mods">{{ range .Site.Params.repos }}<a href="#eco">{{ .name }}</a>{{ end }}</div>
+  </div></div>
 
-    <p class="lead">The bar for every component here is <strong>compatibility with the real thing</strong>,
-      not a plausible reimplementation of it: <code>vault</code> reproduces
-      <code>ansible.parsing.vault.VaultAES256</code>'s exact byte format, and <code>template</code>
-      implements the native-type rendering rule that trips up naive Jinja2 ports. All eight core
-      repositories below are shipped and tagged; parity is still <strong>partial</strong> — see the
-      module count and the engine feature matrix further down this page for exactly what that does and
-      doesn't cover today, re-checked against the code rather than assumed.</p>
-
-    <div class="counts">
-      <div class="count-tile"><span class="n">71 / 71</span><span class="l">full ansible.builtin surface (modules + directives)</span></div>
-      <div class="count-tile"><span class="n">566</span><span class="l">modules registered (builtin + posix + community.general batches 1-15)</span></div>
-      <div class="count-tile"><span class="n">8</span><span class="l">CLI binaries, all shipped</span></div>
-      <div class="count-tile"><span class="n">6</span><span class="l">CPU architectures, race-clean</span></div>
+  <section id="parity" style="padding-top:10px"><div class="wrap">
+    <span class="eyebrow">What is honoured, not what parses</span>
+    <h2>A keyword that parses and does <i>nothing</i> is the worst failure.</h2>
+    <p class="lead">A missing feature stops a playbook. A silently ignored one lets it succeed while not doing what it says — so this table is read from <code>playbook/engine.go</code> and <code>playbook/playbook.go</code> directly, not from the shipped-package list. Several fields exist on the <code>Play</code>/<code>Task</code> structs and parse cleanly from YAML while the engine never reads them; those are the rows that say so.</p>
+    <div class="tablewrap">
+      <table class="matrix">
+        <thead><tr><th>Playbook keyword</th><th>Status</th><th>What that means here</th></tr></thead>
+        <tbody>
+          <tr><td><code>when</code> / <code>loop</code> / <code>register</code></td><td class="st yes">honoured</td><td>Per-host conditionals and loop expansion, with <code>loop_control</code>: <code>loop_var</code>, <code>index_var</code>, <code>label</code>, <code>extended</code> and <code>break_when</code></td></tr>
+          <tr><td><code>block</code> / <code>rescue</code> / <code>always</code></td><td class="st yes">honoured</td><td>Genuine per-host recovery, not merely parsed</td></tr>
+          <tr><td><code>notify</code> / handlers</td><td class="st yes">honoured</td><td>Deduplicated, run once per host after the play</td></tr>
+          <tr><td><code>failed_when</code> / <code>changed_when</code></td><td class="st yes">honoured</td><td>Both <b>replace</b> the module’s own verdict, in either direction, and each records its boolean in <code>failed_when_result</code> / <code>changed_when_result</code></td></tr>
+          <tr><td><code>until</code> / <code>retries</code> / <code>delay</code></td><td class="st yes">honoured</td><td>A real retry loop, with <code>attempts</code> in the result and the <code>FAILED - RETRYING</code> lines — deliberately reproducing a genuine off-by-one in real <code>ansible-core</code>’s own retry loop (registered <code>attempts</code> undercounts by one on exhaustion) rather than “fixing” it</td></tr>
+          <tr><td><code>serial</code> / <code>order</code> / <code>throttle</code></td><td class="st yes">honoured</td><td>Rolling batches, each running every task and handler to completion before the next starts; <code>ansible_play_batch</code>, <code>ansible_play_hosts</code> and <code>ansible_play_hosts_all</code> each mean what they mean in Ansible</td></tr>
+          <tr><td><code>any_errors_fatal</code> / <code>max_fail_percentage</code></td><td class="st yes">honoured</td><td>Either brake ends the <b>run</b>, not just its play, and a failed host leaves the run for every play after it</td></tr>
+          <tr><td><code>timeout</code></td><td class="st yes">honoured</td><td>Gives up on the task’s action and discards what it was doing, rather than reporting it half-done</td></tr>
+          <tr><td><code>become</code></td><td class="st yes">honoured</td><td>Real sudo, end to end, in CI</td></tr>
+          <tr><td><code>pre_tasks</code> / <code>post_tasks</code></td><td class="st yes">honoured</td><td>Concatenated into the task list in pre → tasks → post order and executed normally</td></tr>
+          <tr><td><code>roles</code></td><td class="st yes">honoured</td><td>Loaded from <code>roles/&lt;name&gt;/{tasks,handlers,defaults,vars}/main.yml</code>, spliced into a synthetic block task; role handlers fold into the play’s handler list. Task-level <code>vars:</code> reach the role; <code>vars:</code> <i>inside</i> the mapping is refused, exactly as Ansible refuses it</td></tr>
+          <tr><td><code>include_role</code> / <code>import_role</code></td><td class="st yes">honoured</td><td>Same synthetic-block path as <code>roles:</code>, resolved statically at parse time (not re-evaluated per host)</td></tr>
+          <tr><td><code>include_tasks</code> / <code>import_tasks</code></td><td class="st yes">honoured</td><td>Referenced file’s task list spliced in as a synthetic block, resolved statically at parse time</td></tr>
+          <tr><td><code>import_playbook</code></td><td class="st yes">honoured</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
+          <tr><td>Nested role variable scoping</td><td class="st yes">honoured</td><td>Composes to any depth: a role included from inside another role’s own tasks merges its own defaults/vars on top of the enclosing role’s instead of replacing them outright, restoring exactly the prior state once its block ends — verified against a real <code>ansible-playbook</code> run</td></tr>
+          <tr><td><code>vars_files</code></td><td class="st yes">honoured</td><td>Loaded and merged into <code>Play.Vars</code> at parse time, lower precedence than an explicit <code>vars:</code> key</td></tr>
+          <tr><td><code>vars_prompt</code></td><td class="st yes">honoured</td><td>Prompts interactively for each named var; <code>private</code> defaults to <code>true</code> (masked input); a var already set via <code>-e</code>/extra-vars skips its prompt entirely, matching real Ansible’s <code>preprocess_vars</code></td></tr>
+          <tr><td><code>delegate_to</code></td><td class="st yes">honoured</td><td>Task runs against the delegate target’s connection (templated, cached per batch); falls back to a batch host’s own connection when the target is also a play host</td></tr>
+          <tr><td><code>tags</code> / <code>--tags</code>, <code>--skip-tags</code></td><td class="st yes">honoured</td><td>Tag inheritance computed once at parse time; <code>Engine.RunTags</code>/<code>SkipTags</code> filter tasks (never handlers), and both CLI flags are wired on <code>ansible-playbook</code></td></tr>
+          <tr><td><code>meta: flush_handlers</code> / <code>clear_facts</code></td><td class="st yes">honoured</td><td>Both run for real; any other <code>meta:</code> action <b>errors</b> instead of silently no-op’ing</td></tr>
+          <tr><td><code>add_host</code></td><td class="st yes">honoured</td><td>Adds a host (with vars and groups) to the live inventory mid-run</td></tr>
+          <tr><td><code>group_by</code></td><td class="st yes">honoured</td><td>Adds the current host to an inventory group mid-run</td></tr>
+          <tr><td><code>include_vars</code></td><td class="st yes">honoured</td><td>Loads a YAML file’s keys into the host’s vars, bare-name accessible like <code>set_fact</code></td></tr>
+          <tr><td><code>run_once</code></td><td class="st yes">honoured</td><td>Restricts actual module execution to one host in the batch and broadcasts its <code>register:</code> value to the rest — not coordinated across <code>strategy: free</code>’s independent per-host lanes</td></tr>
+          <tr><td><code>Engine.Forks</code> / <code>--forks</code></td><td class="st yes">honoured</td><td>Real concurrency cap on per-host execution, default 5 (<code>ANSIBLE_FORKS</code>), matching real Ansible’s own default</td></tr>
+          <tr><td><code>async</code> / <code>poll</code></td><td class="st yes">honoured</td><td>Really backgrounds a job on the target’s filesystem (<code>~/.ansible_async/&lt;jid&gt;</code>) for <code>command</code>/<code>shell</code> — the only two modules whose whole job reduces to one remote invocation — surviving the connection closing. A disclosed limit: an overrunning job is not actively killed on timeout the way real Ansible’s <code>async_wrapper.py</code> does, since POSIX process-group kill needs <code>setsid</code>, absent on macOS</td></tr>
+          <tr><td><code>strategy</code></td><td class="st yes">honoured</td><td><code>linear</code> (default) and <code>free</code> — with <code>free</code>, each host runs its whole task list and its own notified handlers independently, with no per-task barrier across hosts</td></tr>
+          <tr><td><code>inventory_hostname</code> / <code>playbook_dir</code></td><td class="st yes">honoured</td><td>Set as magic variables after host_vars, so a same-named host_var cannot shadow them</td></tr>
+          <tr><td><code>register:</code> on a <code>setup:</code>/<code>set_fact:</code> task</td><td class="st yes">honoured</td><td>Nests the result under <code>ansible_facts</code>, matching real Ansible’s registered-result shape exactly — verified against a real <code>ansible-playbook</code> run</td></tr>
+          <tr><td>Fully-qualified collection names</td><td class="st yes">honoured</td><td><code>ansible.builtin.copy</code>, <code>community.general.ufw</code> and the other known collection prefixes resolve exactly like their bare form, for modules and the 9 playbook-engine directives alike</td></tr>
+          <tr><td>Dynamic inventory scripts</td><td class="st yes">honoured</td><td>An executable inventory path runs as a script against the real <code>--list</code>/<code>--host &lt;name&gt;</code> JSON protocol, including the <code>_meta.hostvars</code> optimization and both the shorthand-array and full-object group forms</td></tr>
+          <tr><td><code>ansible.cfg</code> file</td><td class="st yes">honoured</td><td>The <code>[defaults]</code> section is read for the settings this port supports, at the precedence real Ansible uses: host var &gt; environment variable &gt; <code>ansible.cfg</code> &gt; compiled default; discovery order is <code>$ANSIBLE_CONFIG</code> &gt; <code>./ansible.cfg</code> &gt; <code>~/.ansible.cfg</code> &gt; <code>/etc/ansible/ansible.cfg</code>, first found wins outright</td></tr>
+          <tr><td>Lookup plugins</td><td class="st yes">honoured</td><td><code>lookup()</code>/<code>query()</code>/<code>q()</code> as real Jinja globals, with <code>wantlist</code> and <code>errors</code> handled by the shared dispatcher — 17 built in: <code>env</code>, <code>pipe</code>, <code>file</code>, <code>fileglob</code>, <code>first_found</code>, <code>lines</code>, <code>random_choice</code>, <code>varnames</code>, and the nine item/list lookups (<code>items</code>, <code>list</code>, <code>dict</code>, <code>nested</code>, <code>together</code>, <code>subelements</code>, <code>flattened</code>, <code>indexed_items</code>, <code>sequence</code>)</td></tr>
+          <tr><td>Callback plugins</td><td class="st yes">honoured</td><td>A real <code>Callback</code> interface — <code>OnPlayStart</code>, <code>OnTaskResult</code>, <code>OnTaskRetry</code>, <code>OnStats</code> — with the default stdout callback implemented against it rather than hardcoded into the CLI, so a second callback can be added without touching the engine</td></tr>
+          <tr><td><code>connection</code> / <code>remote_user</code> / <code>port</code> at task level</td><td class="st no">refused</td><td>Refused by name, at parse time. Silently accepting <code>connection: local</code> would run something other than what the playbook says, which is worse than saying no</td></tr>
+          <tr><td><code>collections</code>, <code>delegate_facts</code>, <code>become_flags</code></td><td class="st no">refused</td><td>The same rule: named in the refusal, never ignored</td></tr>
+          <tr><td>a strategy other than <code>linear</code> or <code>free</code></td><td class="st no">refused</td><td><code>debug</code>, <code>host_pinned</code> or a strategy plugin is rejected with an explicit parse error, never silently run as linear</td></tr>
+        </tbody>
+      </table>
     </div>
+    <p class="lead" style="margin-top:16px">Still out of scope: the namespace/collection metadata system, Python-style inventory <i>plugins</i> (executable inventory <i>scripts</i> are supported, see the row above), and real <code>ansible-galaxy collection install</code> — this port’s <code>ansible-galaxy</code> only clones a role from a git URL. This table is read from the code on 2026-09-30, and engine work runs in parallel with it, so treat it as a snapshot rather than a promise.</p>
+  </div></section>
 
-    <h2 class="section">Repositories</h2>
-    <section class="grid">
-      {{ range .Site.Params.repos }}
-      <article class="card">
-        <h3>
-          <a href="https://github.com/go-ansible/{{ .name }}"><code>{{ .name }}</code></a>
-          <span class="tags"><span class="type {{ .type }}">{{ .type }}</span><span class="kind {{ .kind }}">{{ .kind }}</span></span>
-        </h3>
-        <p class="accel">{{ .what }}</p>
-        <p class="arch" style="font-size:.85rem;font-weight:600;margin:.3rem 0 0;color:var(--accent)">{{ .proof }}</p>
-        <p>{{ .result }}</p>
-        <div class="badges">
-          <a href="https://github.com/go-ansible/{{ .name }}/actions/workflows/ci.yml"><img src="https://github.com/go-ansible/{{ .name }}/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-        </div>
-      </article>
-      {{ end }}
-    </section>
-
-    <h2 class="section">Engine feature matrix</h2>
-    <p class="principles">The silent-no-op class — a playbook key that parses without error but does
-      nothing — is a worse risk than an outright missing feature, since a playbook using it succeeds
-      while quietly not doing what it claims. This table reflects <code>playbook/engine.go</code> and
-      <code>playbook/playbook.go</code> as read directly, not the shipped-package list: several of these
-      fields exist on the <code>Play</code>/<code>Task</code> structs and parse cleanly from YAML while
-      the engine never reads them.</p>
-    <div class="matrix-wrap">
-    <table class="matrix">
-      <thead><tr><th>Playbook feature</th><th>Status</th><th>Detail</th></tr></thead>
-      <tbody>
-        <tr><td><code>when</code> / <code>loop</code> / <code>register</code></td><td class="status yes">Implemented</td><td>Per-host, real conditionals and loop expansion</td></tr>
-        <tr><td><code>block</code> / <code>rescue</code> / <code>always</code></td><td class="status yes">Implemented</td><td>Genuine per-host recovery, not just parsed</td></tr>
-        <tr><td><code>notify</code> / handlers</td><td class="status yes">Implemented</td><td>Deduplicated, run once per host after the play</td></tr>
-        <tr><td><code>become</code></td><td class="status yes">Implemented</td><td>Real sudo end-to-end test in CI</td></tr>
-        <tr><td><code>pre_tasks</code> / <code>post_tasks</code></td><td class="status yes">Implemented</td><td>Concatenated into the task list in pre → tasks → post order and executed normally</td></tr>
-        <tr><td><code>roles</code></td><td class="status yes">Implemented</td><td>Loaded from <code>roles/&lt;name&gt;/{tasks,handlers,defaults,vars}/main.yml</code>, spliced into a synthetic block task; role handlers fold into the play's handler list</td></tr>
-        <tr><td><code>include_role</code> / <code>import_role</code></td><td class="status yes">Implemented</td><td>Same synthetic-block path as <code>roles:</code>, resolved statically at parse time (not re-evaluated per host)</td></tr>
-        <tr><td><code>include_tasks</code> / <code>import_tasks</code></td><td class="status yes">Implemented</td><td>Referenced file's task list spliced in as a synthetic block, resolved statically at parse time</td></tr>
-        <tr><td><code>vars_files</code></td><td class="status yes">Implemented</td><td>Loaded and merged into <code>Play.Vars</code> at parse time, lower precedence than an explicit <code>vars:</code> key</td></tr>
-        <tr><td><code>delegate_to</code></td><td class="status yes">Implemented</td><td>Task runs against the delegate target's connection (templated, cached per batch); falls back to a batch host's own connection when the target is also a play host</td></tr>
-        <tr><td><code>serial</code></td><td class="status yes">Implemented</td><td>Splits matched hosts into batches; each batch runs every task and handler to completion before the next starts</td></tr>
-        <tr><td><code>tags</code> / <code>--tags</code>, <code>--skip-tags</code></td><td class="status yes">Implemented</td><td>Tag inheritance computed once at parse time; <code>Engine.RunTags</code>/<code>SkipTags</code> filter tasks (never handlers), and both CLI flags are wired on <code>ansible-playbook</code></td></tr>
-        <tr><td><code>meta: flush_handlers</code> / <code>clear_facts</code></td><td class="status yes">Implemented</td><td>Both run for real; any other <code>meta:</code> action errors instead of silently no-op'ing</td></tr>
-        <tr><td><code>add_host</code></td><td class="status yes">Implemented</td><td>Adds a host (with vars and groups) to the live inventory mid-run</td></tr>
-        <tr><td><code>group_by</code></td><td class="status yes">Implemented</td><td>Adds the current host to an inventory group mid-run</td></tr>
-        <tr><td><code>include_vars</code></td><td class="status yes">Implemented</td><td>Loads a YAML file's keys into the host's vars, bare-name accessible like <code>set_fact</code></td></tr>
-        <tr><td><code>inventory_hostname</code> / <code>playbook_dir</code></td><td class="status yes">Implemented</td><td>Set as magic variables after host_vars, so a same-named host_var can't shadow them</td></tr>
-        <tr><td><code>--version</code> (all 8 CLI binaries)</td><td class="status yes">Implemented</td><td><code>ansible</code>, <code>ansible-playbook</code>, <code>ansible-vault</code>, <code>ansible-galaxy</code>, <code>ansible-pull</code>, <code>ansible-doc</code>, <code>ansible-config</code>, <code>ansible-console</code> all print a version string and exit 0</td></tr>
-        <tr><td><code>strategy</code></td><td class="status yes">Implemented</td><td><code>linear</code> (default) and <code>free</code> — with <code>free</code>, each host runs its whole task list and its own notified handlers independently, with no per-task barrier across hosts. Any other named strategy (<code>debug</code>, <code>host_pinned</code>, a strategy plugin) is still rejected with an explicit parse error, never silently accepted</td></tr>
-        <tr><td><code>import_playbook</code></td><td class="status yes">Implemented</td><td>Resolved statically at parse time like <code>import_tasks</code>: splices in every play from the referenced file, whose own nested imports/roles resolve relative to its own directory</td></tr>
-        <tr><td>Nested role variable scoping</td><td class="status yes">Implemented</td><td>Composes to any depth: a role included from inside another role's own tasks merges its own defaults/vars on top of the enclosing role's, instead of replacing them outright, restoring exactly the prior state once its block ends — verified against a real <code>ansible-playbook</code> run</td></tr>
-        <tr><td><code>register:</code> on a <code>setup:</code>/<code>set_fact:</code> task</td><td class="status yes">Implemented</td><td>Nests the result under <code>ansible_facts</code>, matching real Ansible's registered-result shape exactly — verified against a real <code>ansible-playbook</code> run</td></tr>
-        <tr><td>Fully-qualified collection names</td><td class="status yes">Implemented</td><td><code>ansible.builtin.copy</code>, <code>community.general.ufw</code>, and the other three known collection prefixes resolve exactly like their bare form, for modules and the 9 playbook-engine directives alike</td></tr>
-        <tr><td><code>until</code> / <code>retries</code> / <code>delay</code></td><td class="status yes">Implemented</td><td>Retries a task against a condition; deliberately reproduces a genuine off-by-one bug in real <code>ansible-core</code>'s own retry loop (the registered <code>attempts</code> undercounts by one on exhaustion) rather than "fixing" it</td></tr>
-        <tr><td><code>run_once</code></td><td class="status yes">Implemented</td><td>Restricts actual module execution to one host in the batch and broadcasts its <code>register:</code> value to the rest — not coordinated across <code>strategy: free</code>'s independent per-host lanes</td></tr>
-        <tr><td><code>Engine.Forks</code> / <code>--forks</code></td><td class="status yes">Implemented</td><td>Real concurrency cap on per-host execution, default 5 (<code>ANSIBLE_FORKS</code>), matching real Ansible's own default</td></tr>
-        <tr><td><code>vars_prompt</code></td><td class="status yes">Implemented</td><td>Prompts interactively for each named var; <code>private</code> defaults to <code>true</code> (masked input); a var already set via <code>-e</code>/extra-vars skips its prompt entirely, matching real Ansible's <code>preprocess_vars</code></td></tr>
-        <tr><td>Dynamic inventory scripts</td><td class="status yes">Implemented</td><td>An executable inventory path runs as a script against the real <code>--list</code>/<code>--host &lt;name&gt;</code> JSON protocol, including the <code>_meta.hostvars</code> optimization and both the shorthand-array and full-object group forms</td></tr>
-        <tr><td><code>ansible.cfg</code> file</td><td class="status yes">Implemented</td><td>The <code>[defaults]</code> section is read for the settings this port supports, at the precedence real Ansible uses: host var &gt; environment variable &gt; <code>ansible.cfg</code> &gt; compiled default; discovery order is <code>$ANSIBLE_CONFIG</code> &gt; <code>./ansible.cfg</code> &gt; <code>~/.ansible.cfg</code> &gt; <code>/etc/ansible/ansible.cfg</code>, first found wins outright</td></tr>
-        <tr><td><code>async</code> / <code>poll</code></td><td class="status yes">Implemented</td><td>Really backgrounds a job on the target's filesystem (<code>~/.ansible_async/&lt;jid&gt;</code>) for <code>command</code>/<code>shell</code> — the only two modules whose whole job reduces to one remote invocation — surviving the connection closing; a real, disclosed limitation: an overrunning job is not actively killed on timeout the way real Ansible's <code>async_wrapper.py</code> does, since POSIX process-group kill needs <code>setsid</code>, absent on macOS</td></tr>
-      </tbody>
-    </table>
-    </div>
-    <p class="principles">Also out of scope today: the namespace/collection metadata system,
-      Python-style inventory <em>plugins</em> (executable inventory <em>scripts</em> are supported,
-      see the row above), and lookup/callback plugins.
-      <code>ansible-galaxy</code> here only clones a role from a git URL — no galaxy.ansible.com API,
-      no collection installs. This matrix reflects the code as read on 2026-09-06; engine work is
-      active in parallel, so treat it as a snapshot, not a promise.</p>
-
-    <h2 class="section">Module coverage</h2>
-    <p class="principles"><code>modules/registry.go</code> registers <strong>566</strong> module
+  <section id="coverage" style="padding-top:10px"><div class="wrap">
+    <span class="eyebrow">How far the module library reaches</span>
+    <h2>71 of 71 of <code>ansible.builtin</code>, module and directive alike.</h2>
+    <p class="lead"><code>modules/registry.go</code> registers <b>566</b> module names, each running against a live <code>go-remoteexec/transport</code> connection. All <b>62</b> of <code>ansible.builtin</code>’s real modules are there, and its <b>9</b> non-module playbook-engine directives — <code>add_host</code>, <code>group_by</code>, <code>import_playbook</code>, <code>import_role</code>, <code>import_tasks</code>, <code>include_role</code>, <code>include_tasks</code>, <code>include_vars</code>, <code>meta</code> — are wired into the engine itself rather than registered as modules, which is why they appear in the matrix above and not in the registry count. Beyond builtin: all <b>14</b> of <code>ansible.posix</code>, and thirteen curated batches covering <b>490 of community.general’s 577</b>.</p>
+    <p class="lead">What is <i>not</i> covered is worth saying as plainly: <b>87</b> community.general modules remain — an increasingly SaaS-only remainder — along with every cloud-provider collection (amazon.aws, azure, google.cloud and the rest), which needs real API client SDKs rather than shell composition over a connection, and is a different kind of work that has not been started. Where a module could not be done honestly it fails loud instead: <code>synchronize</code> is an always-failing stub, because real <code>synchronize</code> runs rsync from the controller straight at the target’s own SSH endpoint, which this port’s connection abstraction cannot expose from inside a module. Each repository card above opens to the full scope rationale for its own package.</p>
+    <details class="more" style="margin-top:14px"><summary>The collection-by-collection rationale, in full</summary>
+    <p><code>modules/registry.go</code> registers <strong>566</strong> module
       names in total, each running against a live <code>go-remoteexec/transport</code> connection.
       All 62 of <code>ansible.builtin</code>'s real modules are there, plus its 9 non-module
       playbook-engine directives (<code>add_host</code>, <code>group_by</code>,
@@ -236,7 +133,7 @@
       <strong>14</strong> of <code>ansible.posix</code> (<code>synchronize</code> is an honest,
       always-failing stub — real <code>synchronize</code> runs rsync from the controller directly
       against the target's own SSH endpoint, which this port's connection abstraction can't expose
-      from inside a module), and fifteen curated batches of <strong>490 of community.general's 577</strong>
+      from inside a module), and thirteen curated batches of <strong>490 of community.general's 577</strong>
       modules — package managers (including <code>bower</code>/<code>easy_install</code>), language/dev tooling, filesystem/storage (including <code>file_remove</code>), networking, system/service
       management, SELinux, read-only facts, Pacemaker cluster management (including stonith/fencing),
       LDAP, FreeIPA, Redis, Consul,
@@ -303,51 +200,90 @@
       cloud-provider collection (amazon.aws/azure/google.cloud and similar — a
       fundamentally different kind of work, not yet started), the namespace/collection metadata
       system, real <code>ansible-galaxy collection install</code> (this port's <code>ansible-galaxy</code>
-      only clones a role from a git URL), and lookup/callback plugins, remain unported.</p>
+      only clones a role from a git URL) remain unported. Lookup and callback plugins, named here as unported when this page was last written, both shipped since: <code>template</code> registers 17 lookups and <code>playbook</code> carries a real <code>Callback</code> interface.</p>
+    </details>
+  </div></section>
 
-    <h2 class="section">Dependencies</h2>
-    <p class="principles">The low-level connection layer — SSH, local execution, become/sudo — lives
-      outside this org, in <a href="https://github.com/go-remoteexec/transport"><code>go-remoteexec/transport</code></a>,
-      a project-neutral package shared with <a href="https://github.com/go-puppet-bolt">go-puppet-bolt/bolt</a>.
-      <code>modules</code>, <code>playbook</code>, and <code>cli</code> depend on it directly rather than
-      shipping their own transport.</p>
+  <section id="deps" style="padding-top:10px"><div class="wrap">
+    <span class="eyebrow">What it stands on</span>
+    <h2>The transport lives outside this org, on purpose.</h2>
+    <p class="lead">SSH, local execution and become/sudo are in <a href="https://github.com/go-remoteexec/transport"><code>go-remoteexec/transport</code></a>, a project-neutral package shared with <a href="https://github.com/go-puppet-bolt">go-puppet-bolt/bolt</a>. <code>modules</code>, <code>playbook</code> and <code>cli</code> depend on it directly instead of each shipping a transport of its own — the connection layer is not an Ansible-shaped problem, and a package two ports share is held to a harder interface than one with a single caller.</p>
+  </div></section>
 
-    <h2 class="section">Benchmarks</h2>
-    <p class="principles">Real, measured numbers against a real <code>ansible-core</code> install — one
-      machine, N=10 runs, first discarded as warm-up, <code>ansible_connection: local</code> on both
-      sides. Full methodology, every command, and the caveats in
-      <a href="https://github.com/go-ansible/.github/blob/main/BENCHMARKS.md">BENCHMARKS.md</a>.</p>
-    <div class="matrix-wrap">
-    <table class="matrix">
-      <thead><tr><th>Measure</th><th>go-ansible</th><th>real ansible-core</th></tr></thead>
-      <tbody>
-        <tr><td>Control-node footprint</td><td class="status yes">~14M static binary (9.5M stripped)</td><td class="status no">~132M (51M venv + 81M Python interpreter it needs)</td></tr>
-        <tr><td>8-task playbook, median wall clock</td><td class="status yes">25ms</td><td class="status no">1694ms (~68× slower)</td></tr>
-        <tr><td>Process-startup cost alone (1-task no-op)</td><td class="status yes">7ms</td><td class="status no">300ms</td></tr>
-        <tr><td>Minimal working container</td><td class="status yes"><code>FROM scratch</code>, 21.3MB, runs and exits 0</td><td class="status no"><code>python:3.13-slim</code> + pip install, 284MB — <code>scratch</code> is not reachable at all</td></tr>
-      </tbody>
-    </table>
+  <section id="why"><div class="wrap">
+    <span class="eyebrow">Why go-ansible</span>
+    <h2>Compatibility with the real thing, <i>measured</i>.</h2>
+    <p class="lead">The bar is not a plausible reimplementation: it is agreeing with ansible-core on the same input. A differential corpus runs the same playbook through both and compares the transcripts byte for byte — and the divergences that remain are named rather than rounded off.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">🔐</div><h3>The vault format, byte for byte</h3><p>AES-256-CTR with a PBKDF2-HMAC-SHA256 key and an encrypt-then-MAC tag, hex-wrapped at 80 columns — <code>ansible.parsing.vault.VaultAES256</code>'s wire format, not a reinterpretation of it. Each side decrypts the other's files; a bad HMAC fails closed, in constant time, before the ciphertext is touched.</p></div>
+      <div class="card"><div class="ico">🧩</div><h3>The rule naive ports miss</h3><p>A value that is a single <code>{{ "{{ expr }}" }}</code> and nothing else renders to the expression's <i>native</i> type — a list, a dict, an int — not a string. And a <b>null is not an undefined</b>: <code>default()</code> does not fire on one, which is what Jinja2 does and what a port usually gets wrong.</p></div>
+      <div class="card"><div class="ico">📐</div><h3>Precedence as a ladder</h3><p>Role defaults up through play, role, block and task vars, registered vars, role params and <code>--extra-vars</code>, merged low to high. <code>Which(key)</code> answers the question a precedence bug actually raises: <i>why did this value win?</i></p></div>
+      <div class="card"><div class="ico">🧪</div><h3>Judged against the real binary</h3><p>Every claim here was checked by running ansible-core beside this port and diffing the output. Where the two disagree and the cause is upstream — three cases inside the template engine, one needing a second account — the case stays in the corpus as a named witness rather than being deleted.</p></div>
+      <div class="card"><div class="ico">📦</div><h3>566 modules, one contract</h3><p>A function taking a target connection and rendered args, returning changed/failed/msg. All 62 real <code>ansible.builtin</code> modules, all 14 of <code>ansible.posix</code>, and fifteen curated <code>community.general</code> batches. Unlike Ansible, nothing is copied to the target: each module runs on the control node and reaches the host through Exec/Put/Fetch.</p></div>
+      <div class="card"><div class="ico">🚫</div><h3>Honest stubs over quiet approximations</h3><p><code>synchronize</code> is an always-failing stub with its reason written down: the real one runs rsync from the controller straight at the target's own SSH endpoint, which this connection abstraction cannot expose from inside a module. A silent approximation would have been easier, and wrong.</p></div>
     </div>
-    <p class="principles">The <code>FROM scratch</code> proof has a real limit, reported rather than
-      smoothed over: <code>command</code>/<code>shell</code> tasks fork <code>/bin/sh</code>, which
-      <code>scratch</code> doesn't have, so those specific modules need a shell-bearing base
-      (e.g. <code>busybox:musl</code>) even though every module that runs entirely on the controller —
-      <code>debug</code>, <code>set_fact</code>, and others — works in true <code>scratch</code> today.</p>
-  </main>
+  </div></section>
 
-  <footer class="wrap">
-    BSD-3-Clause · <a href="https://github.com/go-ansible">github.com/go-ansible</a> ·
-    not affiliated with Red Hat or the Ansible project
-  </footer>
-  <script>
-  (function(){
-    var order=['system','light','dark'], root=document.documentElement;
-    var labels={system:'🖥️ System',light:'☀️ Light',dark:'🌙 Dark'};
-    function apply(m){ if(m==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',m);} localStorage.setItem('theme',m); var el=document.getElementById('theme-label'); if(el)el.textContent=labels[m]; }
-    var mode=localStorage.getItem('theme')||'system'; apply(mode);
-    var btn=document.getElementById('theme-toggle');
-    if(btn) btn.addEventListener('click',function(){ mode=order[(order.indexOf(mode)+1)%order.length]; apply(mode); });
-  })();
-  </script>
+  <section id="eco" style="padding-top:10px"><div class="wrap">
+    <span class="eyebrow">The repositories</span>
+    <h2>Eight packages, not one monolith.</h2>
+    <p class="lead">Each is importable on its own: a program that only needs to read an inventory takes <code>inventory</code> and nothing else. The line under each name is what was actually checked against ansible-core.</p>
+    <div class="grid">
+      {{ range .Site.Params.repos }}
+      <div class="card">
+        <h3><a href="https://github.com/go-ansible/{{ .name }}"><code>{{ .name }}</code></a>
+          <span class="tag {{ if eq .type "lib" }}ready{{ else }}active{{ end }}" style="margin-left:8px">{{ .type }}</span></h3>
+        <p style="color:var(--accent);font-weight:600;font-size:13px;margin:2px 0 8px">{{ .proof }}</p>
+        <p>{{ .what }}</p>
+        {{ with .result }}<details class="more"><summary>What it actually does</summary><p>{{ . }}</p></details>{{ end }}
+      </div>
+      {{ end }}
+    </div>
+  </div></section>
+
+  <section id="bench" style="padding-top:10px"><div class="wrap">
+    <span class="eyebrow">Measured, not asserted</span>
+    <h2>One machine, ten runs, the first discarded.</h2>
+    <p class="lead"><code>ansible_connection: local</code> on both sides, the same playbook, the same host. Full methodology, every command and every caveat in <a href="https://github.com/go-ansible/.github/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> — these numbers are reproducible or they are worthless.</p>
+    <div class="tablewrap">
+      <table class="bench">
+        <thead><tr><th>Measure</th><th>go-ansible</th><th>ansible-core</th></tr></thead>
+        <tbody>
+          <tr class="win"><td>Control-node footprint</td><td>~14M static binary (9.5M stripped)</td><td>~132M (51M venv + 81M interpreter)</td></tr>
+          <tr class="win"><td>8-task playbook, median wall clock</td><td>25ms</td><td class="xm">1694ms</td></tr>
+          <tr class="win"><td>Process startup alone (1-task no-op)</td><td>7ms</td><td class="xm">300ms</td></tr>
+          <tr class="win"><td>Minimal working container</td><td><code>FROM scratch</code>, 21.3MB</td><td><code>python:3.13-slim</code>, 284MB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lead" style="margin-top:16px">The <code>FROM scratch</code> result has a limit, reported rather than smoothed over: <code>command</code> and <code>shell</code> fork <code>/bin/sh</code>, which <code>scratch</code> does not have. Every module that runs entirely on the controller — <code>debug</code>, <code>set_fact</code> and the rest — works in true <code>scratch</code> today; those two need a shell-bearing base (<code>busybox:musl</code>, for instance).</p>
+  </div></section>
+
+  <section id="stats" style="padding-top:10px"><div class="wrap">
+    <div class="stats">
+      <div><div class="n">71 / 71</div><div class="l">ansible.builtin items — 62 modules and 9 engine directives</div></div>
+      <div><div class="n">566</div><div class="l">modules registered — the count the binary itself lists, not one counted in source</div></div>
+      {{/* DERIVED, so adding a repository to hugo.toml moves this number. */}}
+      <div><div class="n">{{ len .Site.Params.repos }}</div><div class="l">repositories, each importable on its own</div></div>
+      <div><div class="n">6</div><div class="l">64-bit architectures — amd64, arm64, riscv64, loong64, ppc64le, s390x — race-clean</div></div>
+    </div>
+  </div></section>
+
+  <section style="padding-top:10px"><div class="wrap">
+    <div class="band">
+      <h2>Configuration management that ships like Go.</h2>
+      <p>No interpreter, no C toolchain, no runtime to install. The connection layer — SSH, local, become — lives outside this org in <a href="https://github.com/go-remoteexec/transport" style="color:#fff;text-decoration:underline">go-remoteexec/transport</a>, shared with go-puppet-bolt, so neither project ships its own.</p>
+      <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">Read the source on GitHub →</a>
+    </div>
+  </div></section>
+
+  {{/* The trademark disclaimer is NOT boilerplate, and does not come from the
+       layout this page was reshaped after — go-fileshare ports no trademarked
+       product and has no such line. It was in the old footer and has to
+       survive the reformat. */}}
+  <footer><div class="wrap">
+    <span>© the go-ansible authors · BSD-3-Clause · not affiliated with Red Hat or the Ansible project</span>
+    <span>Pure Go · CGO_ENABLED=0 · no frameworks</span>
+  </div></footer>
 </body>
 </html>
