@@ -31,7 +31,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   result = "Implements Ansible's variable precedence as a fixed ladder of named layers — role defaults up through play/role/block/task vars, registered vars, role params, and -e/--extra-vars — merged low to high so a value set higher always wins. Doesn't know about roles or plays itself; a playbook engine assigns each layer's content, this package only owns the merge order, plus a Which(key) call that answers \"why did this variable win?\"."
 [[params.repos]]
   name = "template"
-  what = "Jinja2-compatible templating + Ansible's filters/tests"
+  what = "Jinja2-compatible templating + Ansible's filters, tests and lookups"
   kind = "engine"
   type = "lib"
   proof = "a bare {{ expr }} renders to its native type, not a stringified one — Ansible's own rule"
