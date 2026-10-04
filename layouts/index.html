@@ -39,7 +39,13 @@
      registered and read back. Run twice — `write a file` reports changed on
      the first pass and ok on the second, which is what idempotency looks like
      from outside. The command loop stays changed both times, because `command`
-     is not idempotent and saying otherwise would be the lie. */}}
+     is not idempotent and saying otherwise would be the lie.
+
+     One thing IS altered, and the line below says so rather than letting a
+     reader take this for a byte capture: real pads every banner with stars to
+     80 columns, and so does this port now. At 80 characters each banner wraps
+     onto a second line of stars on a phone (the pre is pre-wrap), which would
+     be most of this block. They are trimmed here. */}}
 <pre><span class="c-cmd">$ ansible-playbook</span> -i hosts site.yml
 <span class="c-out">TASK [Gathering Facts]</span>
 <span class="c-key">ok: [localhost]</span>
@@ -50,6 +56,8 @@
 <span class="c-out">TASK [loop, with a registered result]</span>
 <span class="c-num">changed: [localhost] =&gt; (item=alpha)
 changed: [localhost] =&gt; (item=beta)</span>
+
+<span class="c-com"># banners are padded with stars to 80 columns, as real's are; trimmed here for width</span>
 
 <span class="c-com"># run it again — the copy is idempotent, the command is not</span>
 <span class="c-out">TASK [write a file]</span>
@@ -222,7 +230,7 @@ changed: [localhost] =&gt; (item=beta)</span>
       <div class="card"><div class="ico">🔐</div><h3>The vault format, byte for byte</h3><p>AES-256-CTR with a PBKDF2-HMAC-SHA256 key and an encrypt-then-MAC tag, hex-wrapped at 80 columns — <code>ansible.parsing.vault.VaultAES256</code>'s wire format, not a reinterpretation of it. Each side decrypts the other's files; a bad HMAC fails closed, in constant time, before the ciphertext is touched.</p></div>
       <div class="card"><div class="ico">🧩</div><h3>The rule naive ports miss</h3><p>A value that is a single <code>{{ "{{ expr }}" }}</code> and nothing else renders to the expression's <i>native</i> type — a list, a dict, an int — not a string. And a <b>null is not an undefined</b>: <code>default()</code> does not fire on one, which is what Jinja2 does and what a port usually gets wrong.</p></div>
       <div class="card"><div class="ico">📐</div><h3>Precedence as a ladder</h3><p>Role defaults up through play, role, block and task vars, registered vars, role params and <code>--extra-vars</code>, merged low to high. <code>Which(key)</code> answers the question a precedence bug actually raises: <i>why did this value win?</i></p></div>
-      <div class="card"><div class="ico">🧪</div><h3>Judged against the real binary</h3><p>Every claim here was checked by running ansible-core beside this port and diffing the output. Where the two disagree and the cause is upstream — three cases inside the template engine, one needing a second account — the case stays in the corpus as a named witness rather than being deleted.</p></div>
+      <div class="card"><div class="ico">🧪</div><h3>Judged against the real binary</h3><p>Every claim here was checked by running ansible-core beside this port and diffing the output — <b>six of six</b> transcripts byte-identical on the last sweep, with and without <code>-v</code>. The sweep is also what <i>finds</i> things: it turned up that every banner was missing the stars real pads it to 80 columns with, because the expectations in our own tests had been hand-written rather than captured. Where the two disagree and the cause is upstream — three cases inside the template engine, one needing a second account — the case stays in the corpus as a named witness rather than being deleted.</p></div>
       <div class="card"><div class="ico">📦</div><h3>566 modules, one contract</h3><p>A function taking a target connection and rendered args, returning changed/failed/msg. All 62 real <code>ansible.builtin</code> modules, all 14 of <code>ansible.posix</code>, and fifteen curated <code>community.general</code> batches. Unlike Ansible, nothing is copied to the target: each module runs on the control node and reaches the host through Exec/Put/Fetch.</p></div>
       <div class="card"><div class="ico">🚫</div><h3>Honest stubs over quiet approximations</h3><p><code>synchronize</code> is an always-failing stub with its reason written down: the real one runs rsync from the controller straight at the target's own SSH endpoint, which this connection abstraction cannot expose from inside a module. A silent approximation would have been easier, and wrong.</p></div>
     </div>
