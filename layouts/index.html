@@ -19,7 +19,7 @@
     <a class="brand" href="/"><img class="glyph" src="/img/logo.svg" width="32" height="32" alt="go-ansible logo"> go-ansible</a>
     <nav><a href="#parity">Parity</a><a href="#coverage">Coverage</a><a href="#why">Why</a><a href="#security">Security</a><a href="#bench">Benchmarks</a><a href="#eco">Repositories</a></nav>
     {{ partial "theme-toggle.html" . }}
-    <a class="btn btn-ghost" href="https://github.com/go-ansible">GitHub</a>
+    <a class="btn btn-ghost" href="https://github.com/go-ansible">{{ partial "icons/mark-github.html" . }}GitHub</a>
   </div></header>
 
   <div class="hero"><div class="wrap">
@@ -27,8 +27,8 @@
       <h1 class="head">Ansible's engine,<br><span class="accent">without Python.</span></h1>
       <p class="sub"><b>Ansible's engine is a Python program that needs a matching interpreter on the control node.</b> go-ansible reimplements it as importable Go packages rather than wrapping the Python binary — the same wire formats, the same merge orders, the same rendering rules, compiled into one static executable. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="https://go-ansible.github.io/docs/">Read the documentation →</a>
-        <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">Browse the source</a>
+        <a class="btn btn-primary" href="https://go-ansible.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation →</a>
+        <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">{{ partial "icons/mark-github.html" . }}Browse the source</a>
       </div>
       <div class="trust"><span><b>566</b> modules</span><span><b>9</b> CLI binaries</span><span><b>CGO=0</b> one static binary</span><span><b>Linux · macOS · Windows</b> control node</span></div>
     </div>
@@ -304,7 +304,7 @@ changed: [localhost] =&gt; (item=beta)</span>
     <div class="band">
       <h2>Configuration management that ships like Go.</h2>
       <p>No interpreter, no C toolchain, no runtime to install. The connection layer — SSH, local, become — lives outside this org in <a href="https://github.com/go-remoteexec/transport" style="color:#fff;text-decoration:underline">go-remoteexec/transport</a>, shared with go-puppet-bolt, so neither project ships its own.</p>
-      <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">Read the source on GitHub →</a>
+      <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">{{ partial "icons/mark-github.html" . }}Read the source on GitHub →</a>
     </div>
   </div></section>
 
