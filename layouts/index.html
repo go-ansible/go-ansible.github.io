@@ -13,6 +13,7 @@
 <meta name="description" content="go-ansible is a pure-Go (CGO_ENABLED=0), functional-parity port of Ansible: Vault-compatible encryption, inventory parsing, the variable precedence ladder, Jinja2-compatible templating, 566 modules, fact gathering, the playbook engine, and nine of its eleven ansible-* binaries. No Python, no C extensions, one static binary — and a parity matrix that says which playbook keywords are honoured rather than merely parsed.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 {{ partial "styles.html" . }}
+{{ partial "site-styles.html" . }}
 </head>
 <body class="lm">
   <header class="nav"><div class="wrap">
@@ -306,7 +307,7 @@ changed: [localhost] =&gt; (item=beta)</span>
     <div class="band">
       <h2>Configuration management that ships like Go.</h2>
       <p>No interpreter, no C toolchain, no runtime to install. The connection layer — SSH, local, become — lives outside this org in <a href="https://github.com/go-remoteexec/transport" style="color:#fff;text-decoration:underline">go-remoteexec/transport</a>, shared with go-puppet-bolt, so neither project ships its own.</p>
-      <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">{{ partial "icons/mark-github.html" . }}Read the source on GitHub →</a>
+      <a class="btn btn-ghost" href="https://github.com/go-ansible/cli">{{ partial "icons/github.html" . }}Read the source on GitHub →</a>
     </div>
   </div></section>
 
