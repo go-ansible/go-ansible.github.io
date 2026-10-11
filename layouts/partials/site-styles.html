@@ -11,10 +11,6 @@
   .card .more summary::before{content:"\25B8 ";display:inline-block;transition:transform .15s}
   .card .more[open] summary::before{transform:rotate(90deg)}
   .card .more p{margin:8px 0 0;font-size:13.5px;line-height:1.6}
-  /* A grid item does not shrink below its min-content width by default: on a
-     390px phone one card held the page at 446px and the whole page scrolled
-     sideways. */
-  .grid>*{min-width:0}.card{overflow-wrap:anywhere}
   /* Parity matrix: same tokens as table.bench, but every column reads
      left-to-right as prose rather than as a number to compare, so the
      right-alignment bench uses would fight the content. */
