@@ -1,0 +1,29 @@
+{{/* Rules only this page uses, on top of the shared sheet that
+     github.com/go-fleettools/landingkit's styles.html provides. Included
+     after it, in its own <style> block, so the kit's sheet stays the kit's
+     (landingkit verify compares that block with the reference's). */}}
+<style>
+  /* "What it actually does" / "The collection-by-collection rationale": a
+     disclosure inside a card, or under a section's lead. */
+  .card .more{margin:10px 0 0}
+  .card .more summary{cursor:pointer;color:var(--accent);font-size:13px;font-weight:600;list-style:none}
+  .card .more summary::-webkit-details-marker{display:none}
+  .card .more summary::before{content:"\25B8 ";display:inline-block;transition:transform .15s}
+  .card .more[open] summary::before{transform:rotate(90deg)}
+  .card .more p{margin:8px 0 0;font-size:13.5px;line-height:1.6}
+  /* A grid item does not shrink below its min-content width by default: on a
+     390px phone one card held the page at 446px and the whole page scrolled
+     sideways. */
+  .grid>*{min-width:0}.card{overflow-wrap:anywhere}
+  /* Parity matrix: same tokens as table.bench, but every column reads
+     left-to-right as prose rather than as a number to compare, so the
+     right-alignment bench uses would fight the content. */
+  table.matrix{border-collapse:collapse;width:100%;font-size:13.5px;min-width:680px}
+  table.matrix th,table.matrix td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  table.matrix thead th{background:var(--bg-soft);font-weight:800;color:var(--ink)}
+  table.matrix tbody tr:last-child td{border-bottom:none}
+  table.matrix td.st{white-space:nowrap;font-weight:700}
+  table.matrix td.st.yes{color:var(--ok-fg)}
+  table.matrix td.st.no{color:var(--accent-deep)}
+  table.matrix code{background:var(--bg-soft);border:1px solid var(--line);border-radius:5px;padding:0 4px;font-size:12.5px}
+</style>
