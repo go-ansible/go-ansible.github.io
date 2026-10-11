@@ -34,6 +34,8 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   chipBgDark = "rgba(8,145,178,.14)"
   chipBorderDark = "rgba(8,145,178,.32)"
   chipFgDark = "#77c2d5"
+  statsEnd = "#c4e5ed"
+  bandText = "#d7edf3"
 
 # Each repo card. "kind" says what layer it is; "type" says whether it is a
 # library you import or a service you run. "result" is the honest headline —
