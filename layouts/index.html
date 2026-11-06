@@ -204,7 +204,15 @@ changed: [localhost] =&gt; (item=beta)</span>
       CLI-substitution work: <code>GetBiosRegistries</code> (needs vendor-aware HPE iLO4/iLO5
       workarounds this port has no hardware to verify against) and <code>GetUpdateStatus</code> —
       blocked on redfishtool's own <code>raw</code> subcommand exposing only a JSON body, never the
-      HTTP status code real Ansible's own status logic needs). Two platforms were investigated and found
+      HTTP status code real Ansible's own status logic needs). Those gaps are the default
+      backend's, and the default does not change: the request to the BMC leaves from the target.
+      An operator who wants it to leave from the control node instead sets the variable
+      <code>goansible_redfish_backend: go-redfish</code> (inventory, play vars or <code>-e</code>;
+      real Ansible ignores it, so the playbook stays portable). The in-process
+      <a href="https://github.com/go-redfish/redfish">go-redfish</a> client then covers
+      <strong>every</strong> command of the three modules (only <code>redfish_info</code>'s
+      <code>all</code> shortcut is unsupported, on both backends), <code>auth_token</code> included,
+      and is compared with real ansible-core in CI. Two platforms were investigated and found
       to have no usable official CLI for what their modules need — Pritunl (org/user management, four
       modules) and two of OVHcloud's three modules (<code>ovh_monthly_billing</code> has full coverage)
       — all fail loud rather than
@@ -285,10 +293,10 @@ changed: [localhost] =&gt; (item=beta)</span>
       <table class="bench">
         <thead><tr><th>Measure</th><th>go-ansible</th><th>ansible-core</th></tr></thead>
         <tbody>
-          <tr class="win"><td>Control-node footprint</td><td>~14M static binary (9.5M stripped)</td><td>~132M (51M venv + 81M interpreter)</td></tr>
+          <tr class="win"><td>Control-node footprint</td><td><code>ansible-playbook</code>, one static binary: 29.6MB, 20.9MB stripped (<code>-s -w</code>) — linux/amd64, <code>CGO_ENABLED=0</code>, built from cli v0.149.0, measured 2026-11-06</td><td>~132M (51M venv + 81M interpreter) — measured 2026-09-02</td></tr>
           <tr class="win"><td>8-task playbook, median wall clock</td><td>25ms</td><td class="xm">1694ms</td></tr>
           <tr class="win"><td>Process startup alone (1-task no-op)</td><td>7ms</td><td class="xm">300ms</td></tr>
-          <tr class="win"><td>Minimal working container</td><td><code>FROM scratch</code>, 21.3MB</td><td><code>python:3.13-slim</code>, 284MB</td></tr>
+          <tr class="win"><td>Container image</td><td><code>ghcr.io/go-ansible/cli:v0.149.0</code>, <code>FROM scratch</code> with all 9 CLI binaries, linux/amd64: 146.6MB unpacked, 57.5MB to pull — measured 2026-11-06</td><td><code>python:3.13-slim</code> + ansible-core and its dependencies, linux/arm64: 284MB — measured 2026-09-02</td></tr>
         </tbody>
       </table>
     </div>
